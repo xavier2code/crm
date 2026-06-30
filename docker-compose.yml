@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: crm-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: crm_cy
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_secure_password_here}
+      TZ: Asia/Shanghai
+      PGTZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "crm", "-d", "crm_cy"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crm-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: crm_cy
+      DB_USERNAME: crm
+      DB_PASSWORD: ${DB_PASSWORD:-your_secure_password_here}
+      JWT_SECRET: ${JWT_SECRET:-your-32-byte-or-longer-secret-key-replace-this}
+      JWT_ISSUER: crm-cy
+      TZ: Asia/Shanghai
+      LOG_PATH: /data/crm/logs
+      JVM_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Duser.timezone=Asia/Shanghai -Dfile.encoding=UTF-8"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/data/crm/files
+      - ./logs:/data/crm/logs
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: crm-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  pgdata:

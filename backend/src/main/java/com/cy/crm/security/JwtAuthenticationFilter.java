@@ -1,0 +1,91 @@
+package com.cy.crm.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtUtil jwtUtil;
+    private final com.cy.crm.module.auth.service.TokenBlacklistService tokenBlacklistService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String token = authHeader.substring(7);
+
+        // 检查是否为刷新令牌
+        if ("refresh".equals(jwtUtil.extractTokenType(token))) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 检查令牌是否在黑名单中
+        String jti = jwtUtil.extractJti(token);
+        if (jti != null && tokenBlacklistService.isBlacklisted(jti)) {
+            log.warn("Token in blacklist: {}", jti);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (jwtUtil.validateToken(token) && !jwtUtil.isTokenExpired(token)) {
+            try {
+                String username = jwtUtil.extractUsername(token);
+
+                // 从JWT claims中构建权限列表
+                List<String> ops = jwtUtil.extractOps(token);
+                List<SimpleGrantedAuthority> authorities = ops.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
+                // 创建认证对象
+                Long userId = jwtUtil.extractUserId(token);
+                JwtAuthenticationToken authentication = new JwtAuthenticationToken(
+                        username,
+                        authorities,
+                        userId,
+                        jwtUtil.extractRoles(token),
+                        jwtUtil.extractMenus(token),
+                        jwtUtil.extractDataScope(token)
+                );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                // 将用户ID写入MDC，便于日志追踪
+                if (userId != null) {
+                    MDC.put("userId", String.valueOf(userId));
+                }
+
+                log.debug("Set authentication for user: {} with authorities: {}", username, ops);
+            } catch (Exception e) {
+                log.error("JWT authentication failed", e);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
