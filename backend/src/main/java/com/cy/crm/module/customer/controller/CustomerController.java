@@ -35,6 +35,10 @@ public class CustomerController {
             @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) String keyword
     ) {
+        // 手动限制分页大小，防止 DoS 攻击
+        if (size != null && size > 100) {
+            size = 100L;
+        }
         Long userId = currentUserService.getCurrentUserId();
         List<Long> roleIds = currentUserService.getCurrentUserRoleIds();
         return ApiResult.success(customerService.pageCustomers(current, size, keyword, userId, roleIds));

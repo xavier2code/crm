@@ -26,6 +26,10 @@ public class UserController {
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") @Max(100) Long size) {
+        // 手动限制分页大小，防止 DoS 攻击
+        if (size != null && size > 100) {
+            size = 100L;
+        }
         return ApiResult.ok(userService.pageUsers(keyword, current, size));
     }
 

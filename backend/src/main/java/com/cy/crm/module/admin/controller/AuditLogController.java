@@ -38,6 +38,10 @@ public class AuditLogController {
             @RequestParam(required = false) String operation,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        // 手动限制分页大小，防止 DoS 攻击
+        if (size != null && size > 100) {
+            size = 100L;
+        }
         return auditLogService.pageAuditLogs(current, size, userId, module, operation, startDate, endDate);
     }
 

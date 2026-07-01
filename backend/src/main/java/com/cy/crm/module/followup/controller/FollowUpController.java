@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "跟进记录管理")
 @RestController
 @RequestMapping("/api/follow-ups")
@@ -31,7 +33,13 @@ public class FollowUpController {
             @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Long customerId
     ) {
-        return ApiResult.success(followUpService.pageFollowUps(current, size, customerId));
+        // 手动限制分页大小，防止 DoS 攻击
+        if (size != null && size > 100) {
+            size = 100L;
+        }
+        Long userId = currentUserService.getCurrentUserId();
+        List<Long> roleIds = currentUserService.getCurrentUserRoleIds();
+        return ApiResult.success(followUpService.pageFollowUps(current, size, customerId, userId, roleIds));
     }
 
     @Operation(summary = "创建跟进记录")

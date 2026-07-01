@@ -27,6 +27,10 @@ public class TaskController {
             @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Integer status
     ) {
+        // 手动限制分页大小，防止 DoS 攻击
+        if (size != null && size > 100) {
+            size = 100L;
+        }
         Long userId = currentUserService.getCurrentUserId();
         return ApiResult.success(taskService.pageTasks(current, size, status, userId));
     }
@@ -37,6 +41,10 @@ public class TaskController {
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") @Max(100) Long size
     ) {
+        // 手动限制分页大小，防止 DoS 攻击
+        if (size != null && size > 100) {
+            size = 100L;
+        }
         Long userId = currentUserService.getCurrentUserId();
         return ApiResult.success(taskService.pageTodayTasks(current, size, userId));
     }

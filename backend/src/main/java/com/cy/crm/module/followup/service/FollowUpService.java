@@ -200,6 +200,10 @@ public class FollowUpService extends ServiceImpl<FollowUpMapper, FollowUp> {
         followUpMapper.deleteById(id);
     }
 
+    /**
+     * 判断用户是否仅拥有 BD 角色权限（用于数据范围过滤）
+     * BD 角色只能查看自己创建的跟进记录
+     */
     private boolean hasOnlyBDRole(List<Long> roleIds) {
         return roleIds != null && roleIds.size() == 1 && roleIds.contains(4L);
     }

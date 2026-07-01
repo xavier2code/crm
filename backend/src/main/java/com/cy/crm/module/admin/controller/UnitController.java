@@ -29,6 +29,10 @@ public class UnitController {
             @RequestParam(required = false) String region,
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") @Max(100) Long size) {
+        // 手动限制分页大小，防止 DoS 攻击
+        if (size != null && size > 100) {
+            size = 100L;
+        }
         return ApiResult.ok(unitService.pageUnits(keyword, region, current, size));
     }
 
