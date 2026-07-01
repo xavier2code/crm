@@ -22,6 +22,8 @@ const UsersPage = lazy(() => import('@/pages/system/users'))
 const RolesPage = lazy(() => import('@/pages/system/roles'))
 const DictionaryPage = lazy(() => import('@/pages/system/dictionary'))
 const UnitsPage = lazy(() => import('@/pages/system/units'))
+const BusinessPage = lazy(() => import('@/pages/business'))
+const ReimbursementPage = lazy(() => import('@/pages/reimbursement'))
 const ForbiddenPage = lazy(() => import('@/pages/error/403'))
 
 const PageLoading = () => (
@@ -61,6 +63,8 @@ function buildRoutesFromMenus(menus: MenuItem[]): RouteObject[] {
     '/system/roles': <RolesPage />,
     '/system/dictionary': <DictionaryPage />,
     '/system/units': <UnitsPage />,
+    '/business': <BusinessPage />,
+    '/reimbursement': <ReimbursementPage />,
   }
 
   const routes: RouteObject[] = []
@@ -88,6 +92,9 @@ function buildRoutesFromMenus(menus: MenuItem[]): RouteObject[] {
 
 export function useRoutes() {
   const { menus } = useMenuStore()
+
+  const token = useAuthStore((state) => state.token)
+  const permissionCodes = useAuthStore((state) => state.permissionCodes)
 
   return useMemo<RouteObject[]>(() => {
     const dynamicRoutes = buildRoutesFromMenus(menus)
@@ -132,7 +139,8 @@ export function useRoutes() {
         element: <Navigate to="/login" replace />,
       },
     ]
-  }, [menus])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menus, token, permissionCodes])
 }
 
 export function Router() {
