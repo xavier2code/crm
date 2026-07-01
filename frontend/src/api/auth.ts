@@ -6,6 +6,8 @@ import { request } from './client'
 export interface LoginParams {
   username: string
   password: string
+  captchaUuid: string
+  captchaCode: string
 }
 
 export interface LoginResult {
@@ -18,8 +20,16 @@ export interface LoginResult {
   permissionCodes: string[]
 }
 
+export interface CaptchaResult {
+  image: string
+  uuid: string
+}
+
 export const login = (params: LoginParams) =>
   request<LoginResult>({ method: 'POST', url: '/auth/login', data: params })
+
+export const fetchCaptcha = () =>
+  request<CaptchaResult>({ method: 'GET', url: '/auth/captcha' })
 
 export const fetchCurrentUser = () => request<CurrentUser>({ method: 'GET', url: '/auth/currentUser' })
 
