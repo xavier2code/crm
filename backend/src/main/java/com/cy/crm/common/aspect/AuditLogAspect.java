@@ -129,6 +129,12 @@ public class AuditLogAspect {
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getRemoteAddr();
         }
+
+        // X-Forwarded-For may contain multiple IPs, take the first one
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+
         return ip;
     }
 
