@@ -103,7 +103,11 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
 
         Contract contract = contractConverter.requestToEntity(request);
         contract.setStatus(STATUS_PENDING);
-        contractMapper.insert(contract);
+        try {
+            contractMapper.insert(contract);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BusinessException(6001, "该项目已有合同");
+        }
 
         return contract.getId();
     }

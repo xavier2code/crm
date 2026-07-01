@@ -165,6 +165,9 @@ public class GlobalExceptionHandler {
             if (msg.contains("uq_rebate_rate")) {
                 return ApiResult.error(3005, "返利率配置已存在");
             }
+            if (msg.contains("uk_contract_project")) {
+                return ApiResult.error(6001, "该项目已有合同");
+            }
         }
         return ApiResult.error(1002, "数据已存在或违反约束");
     }

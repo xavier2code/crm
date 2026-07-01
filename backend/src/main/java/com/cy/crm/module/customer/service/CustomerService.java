@@ -84,7 +84,11 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
         customer.setRegion(unit.getRegion());
         customer.setOwnerUserId(userId);
         customer.setCreatedBy(userId);
-        customerMapper.insert(customer);
+        try {
+            customerMapper.insert(customer);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw BusinessException.customerExists();
+        }
 
         if (request.getContacts() != null && !request.getContacts().isEmpty()) {
             saveContacts(customer.getId(), request.getContacts());

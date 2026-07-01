@@ -38,7 +38,11 @@ public class RoleService extends ServiceImpl<RoleMapper, Role> {
         }
         Role role = roleConverter.requestToEntity(request);
         role.setIsBuiltin(0);
-        roleMapper.insert(role);
+        try {
+            roleMapper.insert(role);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BusinessException(3003, "角色编码已存在");
+        }
     }
 
     public void updateRole(RoleRequest request) {
