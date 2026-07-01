@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Form, Input, Button, message } from 'antd'
 
@@ -6,17 +6,30 @@ import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
 import { useDictStore } from '@/stores/dict'
 import { login, fetchCurrentUser, fetchDictionaries } from '@/api/auth'
+import CaptchaInput from '@/components/CaptchaInput'
+import type { CaptchaInputRef, CaptchaInputValue } from '@/components/CaptchaInput'
 import type { DictionaryItem } from '@/stores/dict'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const { setAuth, setUser } = useAuthStore()
   const [loading, setLoading] = useState(false)
+  const captchaRef = useRef<CaptchaInputRef>(null)
 
-  const handleLogin = async (values: { username: string; password: string }) => {
+  const handleLogin = async (values: {
+    username: string
+    password: string
+    captcha: CaptchaInputValue
+  }) => {
     setLoading(true)
     try {
-      const result = await login(values)
+      const { username, password, captcha } = values
+      const result = await login({
+        username,
+        password,
+        captchaUuid: captcha.captchaUuid,
+        captchaCode: captcha.captchaCode,
+      })
       setAuth(result)
       useMenuStore.getState().setMenus(result.menuTree || [])
 
@@ -34,6 +47,7 @@ export default function LoginPage() {
       navigate('/dashboard')
     } catch (error) {
       message.error(error instanceof Error ? error.message : '登录失败')
+      captchaRef.current?.refresh()
     } finally {
       setLoading(false)
     }
@@ -62,6 +76,12 @@ export default function LoginPage() {
             rules={[{ required: true, message: '请输入密码' }]}
           >
             <Input.Password placeholder="密码" />
+          </Form.Item>
+          <Form.Item
+            name="captcha"
+            rules={[{ required: true, message: '请输入验证码' }]}
+          >
+            <CaptchaInput ref={captchaRef} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading} block>
