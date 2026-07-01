@@ -1,0 +1,18 @@
+# 本地开发环境配置
+# 连接外部 PostgreSQL 和 Redis（192.168.2.222）
+# 启动方式：cd backend && SPRING_PROFILES_ACTIVE=dev-local ./gradlew bootRun
+
+spring:
+  datasource:
+    url: jdbc:postgresql://192.168.2.222:5432/crm
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  redis:
+    enabled: true
+    host: 192.168.2.222
+    port: 6379
+    password: 123456
+
+jwt:
+  secret: ${JWT_SECRET:your-32-byte-or-longer-secret-key-replace-this}
