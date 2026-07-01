@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { Card, Form, Input, Button, message } from 'antd'
 
 import { useAuthStore } from '@/stores/auth'
-import { login, fetchCurrentUser } from '@/api/auth'
+import { useMenuStore } from '@/stores/menu'
+import { useDictStore } from '@/stores/dict'
+import { login, fetchCurrentUser, fetchDictionaries } from '@/api/auth'
+import type { DictionaryItem } from '@/stores/dict'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -15,6 +18,16 @@ export default function LoginPage() {
     try {
       const result = await login(values)
       setAuth(result)
+      useMenuStore.getState().setMenus(result.menuTree || [])
+
+      const dicts = await fetchDictionaries()
+      const dictMap: Record<string, DictionaryItem[]> = {}
+      dicts.forEach((item) => {
+        if (!dictMap[item.type]) dictMap[item.type] = []
+        dictMap[item.type].push(item)
+      })
+      useDictStore.getState().setDicts(dictMap)
+
       const user = await fetchCurrentUser()
       setUser(user)
       message.success('登录成功')
