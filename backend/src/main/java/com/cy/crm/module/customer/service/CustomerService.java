@@ -173,6 +173,11 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
             throw BusinessException.customerNotFound();
         }
 
+        // IDOR protection: validate access to this customer
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+
         if (request.getIsPrimary() != null && request.getIsPrimary() == 1) {
             Contact updateContact = new Contact();
             updateContact.setIsPrimary(0);

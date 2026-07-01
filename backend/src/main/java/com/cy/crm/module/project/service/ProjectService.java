@@ -6,6 +6,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.module.admin.service.DictionaryService;
 import com.cy.crm.module.admin.service.UserService;
+import com.cy.crm.security.DataScope;
+import com.cy.crm.security.DataScopeValidator;
+import com.cy.crm.security.SecurityContext;
 import com.cy.crm.module.customer.entity.Customer;
 import com.cy.crm.module.customer.mapper.CustomerMapper;
 import com.cy.crm.module.notification.service.NotificationService;
@@ -50,6 +53,7 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
     private final NotificationService notificationService;
     private final com.cy.crm.module.opportunity.service.OpportunityService opportunityService;
     private final ProjectConverter projectConverter;
+    private final DataScopeValidator dataScopeValidator;
 
     // 项目状态常量
     public static final int STATUS_IN_PROGRESS = 1;
@@ -96,6 +100,17 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
             return null;
         }
 
+        // IDOR protection: validate access to this project
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity != null) {
+            Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+            if (customer != null) {
+                Long currentUserId = SecurityContext.getCurrentUserId();
+                DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+                dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+            }
+        }
+
         ProjectDetailVO vo = new ProjectDetailVO();
         ProjectVO baseVO = toVO(project);
         vo.setId(baseVO.getId());
@@ -128,7 +143,6 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
         vo.setCurrentScore(baseVO.getCurrentScore());
         vo.setCreatedAt(baseVO.getCreatedAt());
 
-        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
         if (opportunity != null) {
             Customer customer = customerMapper.selectById(opportunity.getCustomerId());
             if (customer != null) {
@@ -232,6 +246,17 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
             throw BusinessException.resourceNotFound("项目");
         }
 
+        // IDOR protection: validate access to this project
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity != null) {
+            Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+            if (customer != null) {
+                Long currentUserId = SecurityContext.getCurrentUserId();
+                DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+                dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+            }
+        }
+
         projectConverter.updateEntityFromRequest(request, project);
         projectMapper.updateById(project);
 
@@ -321,6 +346,17 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
         Project project = projectMapper.selectById(projectId);
         if (project == null) {
             throw BusinessException.resourceNotFound("项目");
+        }
+
+        // IDOR protection: validate access to this project
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity != null) {
+            Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+            if (customer != null) {
+                Long currentUserId = SecurityContext.getCurrentUserId();
+                DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+                dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+            }
         }
 
         int currentStatus = project.getStatus();

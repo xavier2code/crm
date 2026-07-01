@@ -197,11 +197,12 @@ public class FollowUpService extends ServiceImpl<FollowUpMapper, FollowUp> {
 
         // IDOR protection: validate access to the customer associated with this follow-up
         Customer customer = customerMapper.selectById(followUp.getCustomerId());
-        if (customer != null) {
-            Long currentUserId = SecurityContext.getCurrentUserId();
-            DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-            dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        if (customer == null) {
+            throw BusinessException.customerNotFound();
         }
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
 
         followUpConverter.updateEntityFromRequest(request, followUp);
         followUpMapper.updateById(followUp);
@@ -216,11 +217,12 @@ public class FollowUpService extends ServiceImpl<FollowUpMapper, FollowUp> {
 
         // IDOR protection: validate access to the customer associated with this follow-up
         Customer customer = customerMapper.selectById(followUp.getCustomerId());
-        if (customer != null) {
-            Long currentUserId = SecurityContext.getCurrentUserId();
-            DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-            dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        if (customer == null) {
+            throw BusinessException.customerNotFound();
         }
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
 
         followUpMapper.deleteById(id);
     }

@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.module.admin.service.DictionaryService;
+import com.cy.crm.security.DataScope;
+import com.cy.crm.security.DataScopeValidator;
+import com.cy.crm.security.SecurityContext;
 import com.cy.crm.module.admin.service.UserService;
 import com.cy.crm.module.customer.entity.Customer;
 import com.cy.crm.module.customer.mapper.CustomerMapper;
@@ -29,6 +32,7 @@ public class TaskService extends ServiceImpl<TaskMapper, Task> {
     private final UserService userService;
     private final DictionaryService dictionaryService;
     private final TaskConverter taskConverter;
+    private final DataScopeValidator dataScopeValidator;
 
     public Page<TaskVO> pageTasks(Long current, Long size, Integer status, Long userId) {
         QueryWrapper<Task> wrapper = new QueryWrapper<Task>()
@@ -59,6 +63,15 @@ public class TaskService extends ServiceImpl<TaskMapper, Task> {
         if (task == null) {
             throw BusinessException.resourceNotFound("任务");
         }
+
+        // IDOR protection: validate access to the customer associated with this task
+        Customer customer = customerMapper.selectById(task.getCustomerId());
+        if (customer != null) {
+            Long currentUserId = SecurityContext.getCurrentUserId();
+            DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+            dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        }
+
         task.setStatus(2);
         taskMapper.updateById(task);
     }
@@ -69,6 +82,15 @@ public class TaskService extends ServiceImpl<TaskMapper, Task> {
         if (task == null) {
             throw BusinessException.resourceNotFound("任务");
         }
+
+        // IDOR protection: validate access to the customer associated with this task
+        Customer customer = customerMapper.selectById(task.getCustomerId());
+        if (customer != null) {
+            Long currentUserId = SecurityContext.getCurrentUserId();
+            DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+            dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        }
+
         task.setStatus(3);
         task.setCloseReason(reason);
         taskMapper.updateById(task);
