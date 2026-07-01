@@ -139,7 +139,6 @@ export function useRoutes() {
         element: <Navigate to="/login" replace />,
       },
     ]
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menus, token, permissionCodes])
 }
 
