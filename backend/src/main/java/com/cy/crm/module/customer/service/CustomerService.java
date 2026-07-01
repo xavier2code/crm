@@ -6,6 +6,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.common.util.FieldMaskUtil;
 import com.cy.crm.module.admin.entity.Unit;
+import com.cy.crm.security.DataScope;
+import com.cy.crm.security.DataScopeValidator;
+import com.cy.crm.security.SecurityContext;
 import com.cy.crm.module.admin.mapper.UnitMapper;
 import com.cy.crm.module.admin.service.DictionaryService;
 import com.cy.crm.module.admin.service.UserService;
@@ -35,6 +38,7 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
     private final UserService userService;
     private final DictionaryService dictionaryService;
     private final CustomerConverter customerConverter;
+    private final DataScopeValidator dataScopeValidator;
 
     public Page<CustomerVO> pageCustomers(Long current, Long size, String keyword, Long userId, List<Long> roleIds) {
         QueryWrapper<Customer> wrapper = new QueryWrapper<Customer>()
@@ -49,7 +53,16 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
 
     public CustomerVO getCustomerById(Long id) {
         Customer customer = customerMapper.selectById(id);
-        return customer != null ? toVO(customer) : null;
+        if (customer == null) {
+            return null;
+        }
+
+        // IDOR protection: validate access to this customer
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+
+        return toVO(customer);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -87,6 +100,11 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
             throw BusinessException.customerNotFound();
         }
 
+        // IDOR protection: validate access to this customer
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+
         if (!customer.getPoliceType().equals(request.getPoliceType()) ||
                 !customer.getUnitId().equals(request.getUnitId())) {
             QueryWrapper<Customer> wrapper = new QueryWrapper<Customer>()
@@ -118,6 +136,16 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteCustomer(Long id) {
+        Customer customer = customerMapper.selectById(id);
+        if (customer == null) {
+            return;
+        }
+
+        // IDOR protection: validate access to this customer
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+
         customerMapper.deleteById(id);
         contactMapper.delete(new QueryWrapper<Contact>().eq("customer_id", id));
     }
@@ -128,6 +156,12 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
         if (customer == null) {
             throw BusinessException.customerNotFound();
         }
+
+        // IDOR protection: validate access to this customer
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+
         customer.setOwnerUserId(userId);
         customerMapper.updateById(customer);
     }
