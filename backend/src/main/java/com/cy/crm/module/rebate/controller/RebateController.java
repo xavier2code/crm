@@ -13,11 +13,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name = "返利管理")
+@Validated
 @RestController
 @RequestMapping("/api/rebates")
 @RequiredArgsConstructor
@@ -36,10 +38,6 @@ public class RebateController {
             @RequestParam(required = false) Integer confirmStatus,
             @RequestParam(required = false) Integer paymentStatus
     ) {
-        // 手动限制分页大小，防止 DoS 攻击
-        if (size != null && size > 100) {
-            size = 100L;
-        }
         if (currentUserService.hasRole("CHANNEL_HEAD") && !currentUserService.hasRole("CYBD")) {
             channelId = currentUserService.getCurrentChannelId();
         }

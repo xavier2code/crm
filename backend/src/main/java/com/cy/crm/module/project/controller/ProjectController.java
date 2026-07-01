@@ -16,12 +16,14 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
 @Tag(name = "项目管理")
+@Validated
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
@@ -39,10 +41,6 @@ public class ProjectController {
             @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Integer status
     ) {
-        // 手动限制分页大小，防止 DoS 攻击
-        if (size != null && size > 100) {
-            size = 100L;
-        }
         Long userId = currentUserService.getCurrentUserId();
         List<Long> roleIds = currentUserService.getCurrentUserRoleIds();
         return ApiResult.success(projectService.pageProjects(current, size, status, userId, roleIds));

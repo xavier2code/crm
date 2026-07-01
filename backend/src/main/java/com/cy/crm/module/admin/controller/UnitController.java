@@ -10,11 +10,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name = "单位主数据")
+@Validated
 @RestController
 @RequestMapping("/api/admin/units")
 @RequiredArgsConstructor
@@ -29,10 +31,6 @@ public class UnitController {
             @RequestParam(required = false) String region,
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") @Max(100) Long size) {
-        // 手动限制分页大小，防止 DoS 攻击
-        if (size != null && size > 100) {
-            size = 100L;
-        }
         return ApiResult.ok(unitService.pageUnits(keyword, region, current, size));
     }
 

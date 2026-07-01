@@ -12,9 +12,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "合同管理")
+@Validated
 @RestController
 @RequestMapping("/api/contracts")
 @RequiredArgsConstructor
@@ -29,10 +31,6 @@ public class ContractController {
             @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Integer status
     ) {
-        // 手动限制分页大小，防止 DoS 攻击
-        if (size != null && size > 100) {
-            size = 100L;
-        }
         return ApiResult.success(contractService.pageContracts(current, size, status));
     }
 

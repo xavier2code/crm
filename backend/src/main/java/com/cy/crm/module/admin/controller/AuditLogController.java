@@ -12,6 +12,7 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ import java.util.List;
 /**
  * 审计日志控制器
  */
+@Validated
 @RestController
 @RequestMapping("/api/admin/audit-logs")
 @RequiredArgsConstructor
@@ -38,10 +40,6 @@ public class AuditLogController {
             @RequestParam(required = false) String operation,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        // 手动限制分页大小，防止 DoS 攻击
-        if (size != null && size > 100) {
-            size = 100L;
-        }
         return auditLogService.pageAuditLogs(current, size, userId, module, operation, startDate, endDate);
     }
 

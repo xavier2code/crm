@@ -9,9 +9,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "任务管理")
+@Validated
 @RestController
 @RequestMapping("/api/tasks")
 @RequiredArgsConstructor
@@ -27,10 +29,6 @@ public class TaskController {
             @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Integer status
     ) {
-        // 手动限制分页大小，防止 DoS 攻击
-        if (size != null && size > 100) {
-            size = 100L;
-        }
         Long userId = currentUserService.getCurrentUserId();
         return ApiResult.success(taskService.pageTasks(current, size, status, userId));
     }
@@ -41,10 +39,6 @@ public class TaskController {
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") @Max(100) Long size
     ) {
-        // 手动限制分页大小，防止 DoS 攻击
-        if (size != null && size > 100) {
-            size = 100L;
-        }
         Long userId = currentUserService.getCurrentUserId();
         return ApiResult.success(taskService.pageTodayTasks(current, size, userId));
     }
