@@ -44,7 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/doc.html", "/webjars/**", "/favicon.ico",
                                "/v3/api-docs/**", "/swagger-ui/**", "/h2-console/**").permitAll()
                 // 管理员专属
-                .requestMatchers("/api/admin/**").hasAuthority(RoleConstants.ADMIN)
+                .requestMatchers("/api/admin/**").hasRole(RoleConstants.ADMIN)
                 // 其他需要认证
                 .anyRequest().authenticated()
             )
