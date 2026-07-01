@@ -18,10 +18,12 @@ public class LoginRequest {
     @ToString.Exclude
     private String password;
 
+    @NotBlank(message = "验证码唯一标识不能为空")
     @Schema(description = "验证码唯一标识")
     @ToString.Exclude
     private String captchaUuid;
 
+    @NotBlank(message = "验证码不能为空")
     @Schema(description = "验证码")
     @ToString.Exclude
     private String captchaCode;

@@ -45,10 +45,8 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
         // 1. 验证验证码
-        if (request.getCaptchaUuid() != null && request.getCaptchaCode() != null) {
-            if (!captchaService.validateCaptcha(request.getCaptchaUuid(), request.getCaptchaCode())) {
-                throw BusinessException.paramError("验证码错误");
-            }
+        if (!captchaService.validateCaptcha(request.getCaptchaUuid(), request.getCaptchaCode())) {
+            throw BusinessException.paramError("验证码错误");
         }
 
         // 2. 检查账户是否被锁定
