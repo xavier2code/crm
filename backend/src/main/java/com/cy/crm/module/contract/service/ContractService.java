@@ -74,15 +74,18 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
 
         // IDOR protection: validate access to this contract
         Project project = projectMapper.selectById(contract.getProjectId());
-        if (project != null) {
-            Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
-            if (opportunity != null) {
-                Customer customer = customerMapper.selectById(opportunity.getCustomerId());
-                if (customer != null) {
-                    Long currentUserId = SecurityContext.getCurrentUserId();
-                    DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-                    dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
-                }
+        if (project == null) {
+            // 项目不存在或当前用户无该项目访问权限，拒绝访问合同
+            return null;
+        }
+
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity != null) {
+            Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+            if (customer != null) {
+                Long currentUserId = SecurityContext.getCurrentUserId();
+                DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+                dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
             }
         }
 
@@ -121,15 +124,18 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
 
         // IDOR protection: validate access to this contract
         Project project = projectMapper.selectById(contract.getProjectId());
-        if (project != null) {
-            Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
-            if (opportunity != null) {
-                Customer customer = customerMapper.selectById(opportunity.getCustomerId());
-                if (customer != null) {
-                    Long currentUserId = SecurityContext.getCurrentUserId();
-                    DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-                    dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
-                }
+        if (project == null) {
+            // 项目不存在或当前用户无该项目访问权限，拒绝更新合同
+            throw BusinessException.dataScopeDenied();
+        }
+
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity != null) {
+            Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+            if (customer != null) {
+                Long currentUserId = SecurityContext.getCurrentUserId();
+                DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+                dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
             }
         }
 

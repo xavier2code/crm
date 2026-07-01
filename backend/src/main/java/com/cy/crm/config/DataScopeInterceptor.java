@@ -64,7 +64,6 @@ public class DataScopeInterceptor implements InnerInterceptor {
             new FieldMapping("created_by", FieldType.CREATED_BY));
 
     private static final TableConfig T_PROJECT = new TableConfig("t_project",
-            new FieldMapping("created_by", FieldType.CREATED_BY),
             new FieldMapping("owner_bd_id", FieldType.OWNER),
             new FieldMapping("sales_user_id", FieldType.OWNER));
 

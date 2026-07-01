@@ -60,7 +60,7 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
         // IDOR protection: validate access to this customer
         Long currentUserId = SecurityContext.getCurrentUserId();
         DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        dataScopeValidator.validateAccess(currentUserId, customer.getCreatedBy(), customer.getUnitId(), currentDataScope);
 
         return toVO(customer);
     }
@@ -107,7 +107,7 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
         // IDOR protection: validate access to this customer
         Long currentUserId = SecurityContext.getCurrentUserId();
         DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        dataScopeValidator.validateAccess(currentUserId, customer.getCreatedBy(), customer.getUnitId(), currentDataScope);
 
         if (!customer.getPoliceType().equals(request.getPoliceType()) ||
                 !customer.getUnitId().equals(request.getUnitId())) {
@@ -148,7 +148,7 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
         // IDOR protection: validate access to this customer
         Long currentUserId = SecurityContext.getCurrentUserId();
         DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        dataScopeValidator.validateAccess(currentUserId, customer.getCreatedBy(), customer.getUnitId(), currentDataScope);
 
         customerMapper.deleteById(id);
         contactMapper.delete(new QueryWrapper<Contact>().eq("customer_id", id));
@@ -164,7 +164,7 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
         // IDOR protection: validate access to this customer
         Long currentUserId = SecurityContext.getCurrentUserId();
         DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        dataScopeValidator.validateAccess(currentUserId, customer.getCreatedBy(), customer.getUnitId(), currentDataScope);
 
         customer.setOwnerUserId(userId);
         customerMapper.updateById(customer);
@@ -180,7 +180,7 @@ public class CustomerService extends ServiceImpl<CustomerMapper, Customer> {
         // IDOR protection: validate access to this customer
         Long currentUserId = SecurityContext.getCurrentUserId();
         DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+        dataScopeValidator.validateAccess(currentUserId, customer.getCreatedBy(), customer.getUnitId(), currentDataScope);
 
         if (request.getIsPrimary() != null && request.getIsPrimary() == 1) {
             Contact updateContact = new Contact();

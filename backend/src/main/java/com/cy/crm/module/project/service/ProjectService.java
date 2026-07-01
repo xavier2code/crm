@@ -107,7 +107,7 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
             if (customer != null) {
                 Long currentUserId = SecurityContext.getCurrentUserId();
                 DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-                dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+                dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
             }
         }
 
@@ -253,7 +253,7 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
             if (customer != null) {
                 Long currentUserId = SecurityContext.getCurrentUserId();
                 DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-                dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+                dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
             }
         }
 
@@ -355,7 +355,7 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
             if (customer != null) {
                 Long currentUserId = SecurityContext.getCurrentUserId();
                 DataScope currentDataScope = SecurityContext.getCurrentDataScope();
-                dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+                dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
             }
         }
 

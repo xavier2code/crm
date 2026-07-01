@@ -22,6 +22,45 @@ public class DataScopeValidator {
     private final DataPermissionMapper dataPermissionMapper;
 
     /**
+     * 验证用户是否有访问指定资源的权限
+     * 综合验证：支持 ALL、SELF_ONLY、UNIT 三种模式
+     *
+     * @param userId 当前用户ID
+     * @param creatorId 资源创建者ID（用于 self-only 验证）
+     * @param unitId 资源所属单位ID（用于 unit 验证）
+     * @param dataScope 用户的数据权限范围
+     */
+    public void validateAccess(Long userId, Long creatorId, Long unitId, DataScope dataScope) {
+        if (dataScope == null) {
+            throw BusinessException.dataScopeDenied();
+        }
+
+        // 1. 全部数据权限 - 直接放行
+        if (Boolean.TRUE.equals(dataScope.getAll())) {
+            return;
+        }
+
+        // 2. Self-only 模式 - 只能访问自己创建的数据
+        if (Boolean.TRUE.equals(dataScope.getSelfOnly())) {
+            if (userId.equals(creatorId)) {
+                return;
+            }
+            throw BusinessException.dataScopeDenied();
+        }
+
+        // 3. 有明确单位权限列表 - 验证 unitId 是否在列表中
+        if (dataScope.getUnitIds() != null && !dataScope.getUnitIds().isEmpty()) {
+            if (dataScope.getUnitIds().contains(unitId)) {
+                return;
+            }
+            throw BusinessException.dataScopeDenied();
+        }
+
+        // 4. 其他权限类型（CHANNEL/REGION）无法验证 - 拒绝
+        throw BusinessException.dataScopeDenied();
+    }
+
+    /**
      * 验证用户是否有访问指定单位数据的权限
      *
      * @param userId 当前用户ID
