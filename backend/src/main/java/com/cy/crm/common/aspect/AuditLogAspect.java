@@ -3,6 +3,7 @@ package com.cy.crm.common.aspect;
 import com.cy.crm.module.admin.entity.User;
 import com.cy.crm.module.admin.mapper.AuditLogMapper;
 import com.cy.crm.module.auth.service.CurrentUserService;
+import com.cy.crm.common.util.IpUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletRequest;
@@ -116,26 +117,7 @@ public class AuditLogAspect {
     }
 
     private String getIpAddress(HttpServletRequest request) {
-        if (request == null) {
-            return "unknown";
-        }
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-
-        // X-Forwarded-For may contain multiple IPs, take the first one
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-
-        return ip;
+        return IpUtils.getClientIp(request);
     }
 
     private String getOperationName(String methodName) {

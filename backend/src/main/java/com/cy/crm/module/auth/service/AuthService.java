@@ -15,6 +15,7 @@ import com.cy.crm.module.admin.service.PasswordPolicyService;
 import com.cy.crm.module.auth.dto.CurrentUserResponse;
 import com.cy.crm.module.auth.dto.LoginRequest;
 import com.cy.crm.module.auth.dto.LoginResponse;
+import com.cy.crm.common.util.IpUtils;
 import com.cy.crm.security.DataScope;
 import com.cy.crm.security.JwtUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -139,30 +140,7 @@ public class AuthService {
     private String getClientIp() {
         HttpServletRequest request =
             ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-
-        // 处理多个 IP 的情况（X-Forwarded-For 可能包含多个 IP）
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-
-        return ip;
+        return IpUtils.getClientIp(request);
     }
 
     /**

@@ -34,6 +34,14 @@ public class TaskService extends ServiceImpl<TaskMapper, Task> {
     private final TaskConverter taskConverter;
     private final DataScopeValidator dataScopeValidator;
 
+    /**
+     * 分页查询任务列表
+     *
+     * 注意：任务列表按 owner_user_id 严格过滤为当前用户，
+     * 这是业务上"每个人只看自己的任务"的设计，本身已防止 IDOR。
+     * DataScopeInterceptor 不作用于 t_task 表（无 unit_id 字段），
+     * 因此列表级权限由该 owner_user_id 过滤保证。
+     */
     public Page<TaskVO> pageTasks(Long current, Long size, Integer status, Long userId) {
         QueryWrapper<Task> wrapper = new QueryWrapper<Task>()
                 .eq("owner_user_id", userId)
@@ -45,6 +53,12 @@ public class TaskService extends ServiceImpl<TaskMapper, Task> {
         return result;
     }
 
+    /**
+     * 查询今日待办任务列表
+     *
+     * 注意：同 pageTasks，列表按 owner_user_id 严格过滤为当前用户，
+     * 本身已防止 IDOR，不依赖 DataScopeInterceptor。
+     */
     public Page<TaskVO> pageTodayTasks(Long current, Long size, Long userId) {
         QueryWrapper<Task> wrapper = new QueryWrapper<Task>()
                 .eq("owner_user_id", userId)
