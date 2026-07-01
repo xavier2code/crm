@@ -2,6 +2,9 @@ package com.cy.crm.module.auth.service;
 
 import com.cy.crm.module.admin.entity.User;
 import com.cy.crm.common.exception.BusinessException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import com.cy.crm.module.admin.mapper.DataPermissionMapper;
 import com.cy.crm.module.admin.mapper.MenuMapper;
 import com.cy.crm.module.admin.mapper.RoleMenuMapper;
@@ -131,10 +134,35 @@ public class AuthService {
     }
 
     /**
-     * 获取客户端IP（简化版）
+     * 获取客户端IP地址
      */
     private String getClientIp() {
-        return "unknown";
+        HttpServletRequest request =
+            ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+
+        // 处理多个 IP 的情况（X-Forwarded-For 可能包含多个 IP）
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+
+        return ip;
     }
 
     /**
