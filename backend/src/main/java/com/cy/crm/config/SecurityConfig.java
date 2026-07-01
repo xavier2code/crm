@@ -42,7 +42,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 公开端点
                 .requestMatchers("/api/auth/**", "/doc.html", "/webjars/**", "/favicon.ico",
-                               "/v3/api-docs/**", "/swagger-ui/**", "/h2-console/**").permitAll()
+                               "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 // 管理员专属
                 .requestMatchers("/api/admin/**").hasRole(RoleConstants.ADMIN)
                 // 其他需要认证
