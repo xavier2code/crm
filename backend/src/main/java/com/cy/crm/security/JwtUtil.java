@@ -159,6 +159,28 @@ public class JwtUtil {
     }
 
     /**
+     * 验证访问令牌
+     * 拒绝刷新令牌被用作访问令牌
+     */
+    public boolean validateAccessToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            // 检查签发者
+            if (!issuer.equals(claims.getIssuer())) {
+                return false;
+            }
+            // 访问令牌不应有 type claim 或 type 不为 "refresh"
+            String type = claims.get("type", String.class);
+            if ("refresh".equals(type)) {
+                return false;
+            }
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
      * 检查令牌是否过期
      */
     public boolean isTokenExpired(String token) {

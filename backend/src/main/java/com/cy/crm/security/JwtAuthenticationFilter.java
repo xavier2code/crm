@@ -38,12 +38,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        // 检查是否为刷新令牌
-        if ("refresh".equals(jwtUtil.extractTokenType(token))) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         // 检查令牌是否在黑名单中
         String jti = jwtUtil.extractJti(token);
         if (jti != null && tokenBlacklistService.isBlacklisted(jti)) {
@@ -52,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (jwtUtil.validateToken(token) && !jwtUtil.isTokenExpired(token)) {
+        if (jwtUtil.validateAccessToken(token) && !jwtUtil.isTokenExpired(token)) {
             try {
                 String username = jwtUtil.extractUsername(token);
 
