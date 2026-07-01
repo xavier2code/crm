@@ -51,6 +51,29 @@ public class AuditLogAspect {
         Object result = null;
         Exception exception = null;
 
+        // Extract context-dependent data in MAIN thread before async execution
+        HttpServletRequest request = getRequest();
+        Long userId = currentUserService.getCurrentUserId();
+        String username = null;
+        User user = currentUserService.getCurrentUser();
+        if (user != null) {
+            username = user.getUsername();
+        }
+        String className = joinPoint.getTarget().getClass().getSimpleName();
+        String methodName = joinPoint.getSignature().getName();
+        Object[] args = joinPoint.getArgs();
+        String params = null;
+        if (args != null && args.length > 0) {
+            try {
+                params = sanitizeParams(args);
+            } catch (Exception e) {
+                params = args.length + " params";
+            }
+        } else {
+            params = "";
+        }
+        String ip = getIpAddress(request);
+
         try {
             result = joinPoint.proceed();
             return result;
@@ -59,44 +82,25 @@ public class AuditLogAspect {
             throw e;
         } finally {
             long executeTime = System.currentTimeMillis() - startTime;
-            saveAuditLogAsync(joinPoint, executeTime, exception);
+            // Pass all extracted context as parameters
+            saveAuditLogAsync(userId, username, className, methodName, params, ip, executeTime, exception);
         }
     }
 
     @Async("auditLogExecutor")
-    private void saveAuditLogAsync(ProceedingJoinPoint joinPoint, long executeTime, Exception exception) {
+    private void saveAuditLogAsync(Long userId, String username, String className, String methodName,
+                                    String params, String ip, long executeTime, Exception exception) {
         try {
-            HttpServletRequest request = getRequest();
-            if (request == null) {
-                return;
-            }
-
             com.cy.crm.module.admin.entity.AuditLog auditLog = new com.cy.crm.module.admin.entity.AuditLog();
 
-            Long userId = currentUserService.getCurrentUserId();
+            // Use pre-extracted context from main thread
             auditLog.setUserId(userId != null ? userId : 0L);
-
-            User user = currentUserService.getCurrentUser();
-            auditLog.setUsername(user != null ? user.getUsername() : "system");
-
-            String className = joinPoint.getTarget().getClass().getSimpleName();
-            String methodName = joinPoint.getSignature().getName();
+            auditLog.setUsername(username != null ? username : "system");
             auditLog.setModule(className);
             auditLog.setMethod(methodName);
             auditLog.setOperation(getOperationName(methodName));
-
-            Object[] args = joinPoint.getArgs();
-            if (args != null && args.length > 0) {
-                try {
-                    auditLog.setParams(sanitizeParams(args));
-                } catch (Exception e) {
-                    auditLog.setParams(args.length + " params");
-                }
-            } else {
-                auditLog.setParams("");
-            }
-
-            auditLog.setIp(getIpAddress(request));
+            auditLog.setParams(params);
+            auditLog.setIp(ip);
             auditLog.setStatus(exception == null ? 1 : 0);
             auditLog.setErrorMsg(exception != null ? exception.getMessage() : null);
             auditLog.setExecuteTime((int) executeTime);
