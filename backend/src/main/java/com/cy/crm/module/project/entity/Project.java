@@ -1,5 +1,6 @@
 package com.cy.crm.module.project.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.cy.crm.common.entity.BaseEntity;
 import lombok.Data;
@@ -27,6 +28,7 @@ public class Project extends BaseEntity {
     private LocalDate expectedSignDate;
     private Integer status;
     private Integer pNode;
+    @TableField("stage_6")
     private String stage6;
     private String customerLayer;
     private LocalDateTime trialAt;

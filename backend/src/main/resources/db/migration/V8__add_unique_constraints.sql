@@ -1,5 +1,16 @@
 -- 添加数据库唯一约束以防止竞态条件
 -- Task 15: 修复竞态条件
+--
+-- 说明：项目的唯一约束保护工作在 V2 迁移中已大部分完成：
+-- - Role.code ✅ UNIQUE (V2)
+-- - Unit.code ✅ UNIQUE (V2)
+-- - Customer(unit_id, police_type) ✅ UNIQUE (V2)
+-- - Project.opportunity_id ✅ UNIQUE (V2)
+-- - BiddingNode.project_id ✅ UNIQUE (V2)
+-- - ContractNode.project_id ✅ UNIQUE (V2)
+-- - User.username ✅ UNIQUE (V2)
+--
+-- V8 仅补充遗漏的 Contract.project_id 约束
 
 -- 合同表：每个项目只能有一个合同
 ALTER TABLE t_contract ADD CONSTRAINT uk_contract_project UNIQUE (project_id);
