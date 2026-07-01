@@ -8,6 +8,9 @@ import com.cy.crm.module.admin.service.DictionaryService;
 import com.cy.crm.module.admin.service.UserService;
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.common.annotation.AuditLog;
+import com.cy.crm.security.DataScope;
+import com.cy.crm.security.DataScopeValidator;
+import com.cy.crm.security.SecurityContext;
 import com.cy.crm.module.customer.entity.Customer;
 import com.cy.crm.module.customer.mapper.CustomerMapper;
 import com.cy.crm.module.opportunity.converter.OpportunityConverter;
@@ -39,6 +42,7 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
     private final UserService userService;
     private final DictionaryService dictionaryService;
     private final OpportunityConverter opportunityConverter;
+    private final DataScopeValidator dataScopeValidator;
 
     public static final int STATUS_DRAFT = 1;
     public static final int STATUS_PENDING = 2;
@@ -75,6 +79,12 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
         if (opportunity == null) {
             return null;
         }
+
+        // IDOR protection: validate access based on submitted_by
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateCreatorAccess(currentUserId, opportunity.getSubmittedBy(), currentDataScope);
+
         OpportunityDetailVO vo = new OpportunityDetailVO();
         OpportunityVO baseVO = toVO(opportunity);
         vo.setId(baseVO.getId());
@@ -145,6 +155,12 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
         if (opportunity == null) {
             throw BusinessException.resourceNotFound("报备");
         }
+
+        // IDOR protection: validate access based on submitted_by
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateCreatorAccess(currentUserId, opportunity.getSubmittedBy(), currentDataScope);
+
         if (opportunity.getStatus() != STATUS_DRAFT && opportunity.getStatus() != STATUS_FAILED) {
             throw new BusinessException(4008, "只有草稿或报备失败的记录可以编辑");
         }
@@ -236,6 +252,12 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
         if (opportunity == null) {
             throw BusinessException.resourceNotFound("报备");
         }
+
+        // IDOR protection: validate access based on submitted_by
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateCreatorAccess(currentUserId, opportunity.getSubmittedBy(), currentDataScope);
+
         if (opportunity.getStatus() != STATUS_DRAFT) {
             throw new BusinessException(4011, "只有草稿状态的记录可以删除");
         }

@@ -13,14 +13,17 @@ import com.cy.crm.module.auth.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
 @Tag(name = "项目管理")
+@Validated
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
@@ -35,7 +38,7 @@ public class ProjectController {
     @GetMapping
     public ApiResult<Page<ProjectVO>> pageProjects(
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size,
+            @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Integer status
     ) {
         Long userId = currentUserService.getCurrentUserId();
@@ -104,7 +107,7 @@ public class ProjectController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Void> updateMilestone(
             @PathVariable Long id,
-            @RequestBody ProjectDetailVO.MilestoneVO request) {
+            @Valid @RequestBody ProjectDetailVO.MilestoneVO request) {
         projectService.updateMilestone(id, request);
         return ApiResult.success();
     }
@@ -128,7 +131,7 @@ public class ProjectController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Long> addPaymentNode(
             @PathVariable Long id,
-            @RequestBody ProjectDetailVO.PaymentNodeVO request) {
+            @Valid @RequestBody ProjectDetailVO.PaymentNodeVO request) {
         return ApiResult.success(projectService.addPaymentNode(id, request));
     }
 
@@ -155,7 +158,7 @@ public class ProjectController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Long> saveBiddingNode(
             @PathVariable Long id,
-            @RequestBody BiddingNodeRequest request) {
+            @Valid @RequestBody BiddingNodeRequest request) {
         return ApiResult.success(biddingNodeService.saveBiddingNode(id, request));
     }
 
@@ -172,7 +175,7 @@ public class ProjectController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Long> saveContractNode(
             @PathVariable Long id,
-            @RequestBody ContractNodeRequest request) {
+            @Valid @RequestBody ContractNodeRequest request) {
         return ApiResult.success(contractNodeService.saveContractNode(id, request));
     }
 }

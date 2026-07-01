@@ -6,16 +6,12 @@ import com.cy.crm.module.rebate.vo.RebateVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
-
 /**
  * 返利对象映射器
  * 符合开发文档 §38 MapStruct 映射规范
  */
 @Mapper(componentModel = "spring")
 public interface RebateConverter {
-
-    RebateConverter INSTANCE = Mappers.getMapper(RebateConverter.class);
 
     /**
      * 请求 DTO -> 实体

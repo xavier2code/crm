@@ -7,10 +7,13 @@ import com.cy.crm.module.task.vo.TaskVO;
 import com.cy.crm.module.auth.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "任务管理")
+@Validated
 @RestController
 @RequestMapping("/api/tasks")
 @RequiredArgsConstructor
@@ -23,7 +26,7 @@ public class TaskController {
     @GetMapping
     public ApiResult<Page<TaskVO>> pageTasks(
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size,
+            @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Integer status
     ) {
         Long userId = currentUserService.getCurrentUserId();
@@ -34,7 +37,7 @@ public class TaskController {
     @GetMapping("/today")
     public ApiResult<Page<TaskVO>> pageTodayTasks(
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size
+            @RequestParam(defaultValue = "10") @Max(100) Long size
     ) {
         Long userId = currentUserService.getCurrentUserId();
         return ApiResult.success(taskService.pageTodayTasks(current, size, userId));

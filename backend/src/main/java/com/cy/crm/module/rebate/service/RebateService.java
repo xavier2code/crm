@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.common.util.FieldMaskUtil;
+import com.cy.crm.security.DataScope;
+import com.cy.crm.security.DataScopeValidator;
+import com.cy.crm.security.SecurityContext;
 import com.cy.crm.module.admin.mapper.ChannelMapper;
 import com.cy.crm.module.admin.service.DictionaryService;
 import com.cy.crm.module.auth.service.CurrentUserService;
@@ -32,6 +35,7 @@ public class RebateService extends ServiceImpl<RebateMapper, Rebate> {
     private final RebateRateService rebateRateService;
     private final CurrentUserService currentUserService;
     private final RebateConverter rebateConverter;
+    private final DataScopeValidator dataScopeValidator;
 
     public Page<RebateVO> pageRebates(Long current, Long size, Long channelId, Integer confirmStatus, Integer paymentStatus) {
         QueryWrapper<Rebate> wrapper = new QueryWrapper<Rebate>()
@@ -67,6 +71,11 @@ public class RebateService extends ServiceImpl<RebateMapper, Rebate> {
             throw BusinessException.resourceNotFound("返利记录");
         }
 
+        // IDOR protection: validate access to this rebate
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateChannelAccess(currentUserId, rebate.getChannelId(), currentDataScope);
+
         rebateConverter.updateEntityFromRequest(request, rebate);
         rebateMapper.updateById(rebate);
     }
@@ -77,6 +86,12 @@ public class RebateService extends ServiceImpl<RebateMapper, Rebate> {
         if (rebate == null) {
             throw BusinessException.resourceNotFound("返利记录");
         }
+
+        // IDOR protection: validate access to this rebate
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateChannelAccess(currentUserId, rebate.getChannelId(), currentDataScope);
+
         rebate.setConfirmStatus(confirmStatus);
         rebateMapper.updateById(rebate);
     }
@@ -87,6 +102,12 @@ public class RebateService extends ServiceImpl<RebateMapper, Rebate> {
         if (rebate == null) {
             throw BusinessException.resourceNotFound("返利记录");
         }
+
+        // IDOR protection: validate access to this rebate
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateChannelAccess(currentUserId, rebate.getChannelId(), currentDataScope);
+
         rebate.setPaymentStatus(paymentStatus);
         rebateMapper.updateById(rebate);
     }

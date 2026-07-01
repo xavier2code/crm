@@ -2,6 +2,9 @@ package com.cy.crm.module.auth.service;
 
 import com.cy.crm.module.admin.entity.User;
 import com.cy.crm.common.exception.BusinessException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import com.cy.crm.module.admin.mapper.DataPermissionMapper;
 import com.cy.crm.module.admin.mapper.MenuMapper;
 import com.cy.crm.module.admin.mapper.RoleMenuMapper;
@@ -12,6 +15,7 @@ import com.cy.crm.module.admin.service.PasswordPolicyService;
 import com.cy.crm.module.auth.dto.CurrentUserResponse;
 import com.cy.crm.module.auth.dto.LoginRequest;
 import com.cy.crm.module.auth.dto.LoginResponse;
+import com.cy.crm.common.util.IpUtils;
 import com.cy.crm.security.DataScope;
 import com.cy.crm.security.JwtUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -45,10 +49,8 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
         // 1. 验证验证码
-        if (request.getCaptchaUuid() != null && request.getCaptchaCode() != null) {
-            if (!captchaService.validateCaptcha(request.getCaptchaUuid(), request.getCaptchaCode())) {
-                throw BusinessException.paramError("验证码错误");
-            }
+        if (!captchaService.validateCaptcha(request.getCaptchaUuid(), request.getCaptchaCode())) {
+            throw BusinessException.paramError("验证码错误");
         }
 
         // 2. 检查账户是否被锁定
@@ -133,10 +135,12 @@ public class AuthService {
     }
 
     /**
-     * 获取客户端IP（简化版）
+     * 获取客户端IP地址
      */
     private String getClientIp() {
-        return "unknown";
+        HttpServletRequest request =
+            ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        return IpUtils.getClientIp(request);
     }
 
     /**

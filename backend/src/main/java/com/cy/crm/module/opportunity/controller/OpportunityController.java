@@ -12,13 +12,16 @@ import com.cy.crm.module.auth.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name = "商机报备管理")
+@Validated
 @RestController
 @RequestMapping("/api/opportunities")
 @RequiredArgsConstructor
@@ -31,7 +34,7 @@ public class OpportunityController {
     @GetMapping
     public ApiResult<Page<OpportunityVO>> pageOpportunities(
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size,
+            @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Integer status
     ) {
         Long userId = currentUserService.getCurrentUserId();

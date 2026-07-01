@@ -8,10 +8,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "用户管理")
+@Validated
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
@@ -24,7 +27,7 @@ public class UserController {
     public ApiResult<Page<UserVO>> page(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size) {
+            @RequestParam(defaultValue = "10") @Max(100) Long size) {
         return ApiResult.ok(userService.pageUsers(keyword, current, size));
     }
 

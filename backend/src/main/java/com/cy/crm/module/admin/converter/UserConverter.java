@@ -6,8 +6,6 @@ import com.cy.crm.module.admin.vo.UserVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
-
 import java.util.List;
 
 /**
@@ -16,8 +14,6 @@ import java.util.List;
  */
 @Mapper(componentModel = "spring")
 public interface UserConverter {
-
-    UserConverter INSTANCE = Mappers.getMapper(UserConverter.class);
 
     /**
      * 请求 DTO -> 实体

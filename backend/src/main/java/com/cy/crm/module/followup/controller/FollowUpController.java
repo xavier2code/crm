@@ -10,13 +10,16 @@ import com.cy.crm.module.auth.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name = "跟进记录管理")
+@Validated
 @RestController
 @RequestMapping("/api/follow-ups")
 @RequiredArgsConstructor
@@ -29,7 +32,7 @@ public class FollowUpController {
     @GetMapping
     public ApiResult<Page<FollowUpVO>> pageFollowUps(
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size,
+            @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Long customerId
     ) {
         Long userId = currentUserService.getCurrentUserId();

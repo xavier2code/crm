@@ -2,6 +2,8 @@ package com.cy.crm.common.exception;
 
 import com.cy.crm.common.response.ApiResult;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -72,6 +74,22 @@ public class GlobalExceptionHandler {
                 ));
         log.warn("参数绑定失败: {}", details);
         return ApiResult.error(1001, "参数绑定失败", details);
+    }
+
+    /**
+     * 方法参数校验异常（@Validated 方法参数上的 @Max/@NotNull 等）
+     * 错误码：1001
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ApiResult<Map<String, String>> handleConstraintViolation(ConstraintViolationException e) {
+        Map<String, String> details = e.getConstraintViolations().stream()
+                .collect(Collectors.toMap(
+                        violation -> violation.getPropertyPath().toString(),
+                        ConstraintViolation::getMessage,
+                        (existing, replacement) -> existing + "; " + replacement
+                ));
+        log.warn("方法参数校验失败: {}", details);
+        return ApiResult.error(1001, "参数校验失败", details);
     }
 
     /**
@@ -164,6 +182,9 @@ public class GlobalExceptionHandler {
             }
             if (msg.contains("uq_rebate_rate")) {
                 return ApiResult.error(3005, "返利率配置已存在");
+            }
+            if (msg.contains("uk_contract_project")) {
+                return ApiResult.error(6001, "该项目已有合同");
             }
         }
         return ApiResult.error(1002, "数据已存在或违反约束");

@@ -1,6 +1,7 @@
 package com.cy.crm.config;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.security.DataScope;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
@@ -8,6 +9,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.StringValue;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -17,6 +19,8 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SetOperationList;
+import net.sf.jsqlparser.statement.select.SelectItem;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -46,36 +50,32 @@ public class DataScopeInterceptor implements InnerInterceptor {
      * 表权限配置：表名 -> 该表支持的权限字段映射
      *
      * 说明：
-     * - t_customer: 标准渠道/区域/创建者模型
-     * - t_opportunity: 标准渠道/区域模型，submitted_by 对应 created_by
-     * - t_contract: 通过 project_id 关联 t_project 做 exists 子查询最为精确，
-     *   但为简化实现先用 created_by 做 self-only 兜底，后续可扩展为 exists 子查询。
-     * - t_order: 简化处理，使用 created_by 做 self-only 兜底。
-     * - t_project: 使用 owner_bd_id / sales_user_id / created_by 做权限控制
-     * - t_follow_up: 通过 customer_id 关联 t_customer 做 exists 子查询最为精确，
-     *   但为简化实现先用 created_by 做 self-only 兜底，后续可扩展为 exists 子查询。
+     * - t_customer: 标准单位/区域/创建者模型
+     * - t_opportunity: 配置保留原样
+     * - t_order: 简化处理，使用 created_by 做 self-only 兜底
+     * - t_project: 使用 owner_bd_id / sales_user_id 做权限控制
      * - t_rebate: 标准渠道/创建者模型
      */
+    private static final TableConfig T_CUSTOMER = new TableConfig("t_customer",
+            new FieldMapping("channel_id", FieldType.CHANNEL_ID),
+            new FieldMapping("unit_id", FieldType.UNIT_ID),
+            new FieldMapping("region", FieldType.REGION),
+            new FieldMapping("owner_user_id", FieldType.OWNER),
+            new FieldMapping("created_by", FieldType.CREATED_BY));
+
+    private static final TableConfig T_PROJECT = new TableConfig("t_project",
+            new FieldMapping("owner_bd_id", FieldType.OWNER),
+            new FieldMapping("sales_user_id", FieldType.OWNER));
+
     private static final TableConfig[] TABLE_CONFIGS = {
-            new TableConfig("t_customer",
-                    new FieldMapping("channel_id", FieldType.CHANNEL_ID),
-                    new FieldMapping("region", FieldType.REGION),
-                    new FieldMapping("owner_user_id", FieldType.OWNER),
-                    new FieldMapping("created_by", FieldType.CREATED_BY)),
+            T_CUSTOMER,
             new TableConfig("t_opportunity",
                     new FieldMapping("channel_id", FieldType.CHANNEL_ID),
                     new FieldMapping("region", FieldType.REGION),
                     new FieldMapping("submitted_by", FieldType.CREATED_BY)),
-            new TableConfig("t_contract",
-                    new FieldMapping("created_by", FieldType.CREATED_BY)),
             new TableConfig("t_order",
                     new FieldMapping("created_by", FieldType.CREATED_BY)),
-            new TableConfig("t_project",
-                    new FieldMapping("owner_bd_id", FieldType.OWNER),
-                    new FieldMapping("sales_user_id", FieldType.OWNER),
-                    new FieldMapping("created_by", FieldType.CREATED_BY)),
-            new TableConfig("t_follow_up",
-                    new FieldMapping("created_by", FieldType.CREATED_BY)),
+            T_PROJECT,
             new TableConfig("t_rebate",
                     new FieldMapping("channel_id", FieldType.CHANNEL_ID),
                     new FieldMapping("owner_user_id", FieldType.OWNER),
@@ -93,15 +93,21 @@ public class DataScopeInterceptor implements InnerInterceptor {
         CREATED_BY    // 对应当前用户ID（self-only）
     }
 
+
     /**
      * 字段映射：数据库字段名 -> 字段类型
      */
-    private record FieldMapping(String columnName, FieldType fieldType) {}
+    private record FieldMapping(String columnName, FieldType fieldType) {
+    }
 
     /**
      * 表配置：表名 + 该表支持的字段映射列表
      */
-    private record TableConfig(String tableName, FieldMapping... fields) {}
+    private record TableConfig(
+            String tableName,
+            FieldMapping... fields
+    ) {
+    }
 
     @Override
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter,
@@ -110,13 +116,15 @@ public class DataScopeInterceptor implements InnerInterceptor {
 
         // 1. 获取当前用户的数据权限范围
         DataScope dataScope = getCurrentDataScope();
-        if (dataScope == null || Boolean.TRUE.equals(dataScope.getAll())) {
-            return; // 无权限限制或全部权限，不处理
+        if (dataScope == null) {
+            // 延迟检查：只有在匹配到受控表时才拒绝，允许非受控表查询
+        } else if (Boolean.TRUE.equals(dataScope.getAll())) {
+            return; // 全部权限，不处理
         }
 
-        // 2. 只处理 SELECT 语句
+        // 2. 只处理 SELECT 语句（包括 UNION/CTE 等复杂查询）
         String trimmed = originalSql.trim();
-        if (trimmed.length() < 6 || !trimmed.substring(0, 6).toUpperCase().equals("SELECT")) {
+        if (!isSelectQuery(trimmed)) {
             return;
         }
 
@@ -124,13 +132,18 @@ public class DataScopeInterceptor implements InnerInterceptor {
         String lowerSql = originalSql.toLowerCase();
         TableConfig matchedConfig = null;
         for (TableConfig config : TABLE_CONFIGS) {
-            if (lowerSql.contains(config.tableName())) {
+            if (matchesTableName(lowerSql, config.tableName())) {
                 matchedConfig = config;
                 break;
             }
         }
         if (matchedConfig == null) {
-            return;
+            return; // 无受控表，放行
+        }
+
+        // 3.1. 受控表查询必须有数据权限范围（防止无认证用户查询受控表）
+        if (dataScope == null) {
+            throw BusinessException.dataScopeDenied();
         }
 
         // 4. 使用 JSqlParser 解析 SQL 并注入权限条件
@@ -141,9 +154,18 @@ public class DataScopeInterceptor implements InnerInterceptor {
                 return; // 不是 SELECT，放行
             }
 
-            // 只处理 PlainSelect（标准查询），子查询等复杂情况由外层查询处理
+            // 只处理 PlainSelect（标准查询），拒绝 UNION/CTE 等复杂查询以确保安全
             if (!(select.getSelectBody() instanceof PlainSelect plainSelect)) {
-                return;
+                // UNION 查询使用 SetOperationList
+                if (select.getSelectBody() instanceof SetOperationList) {
+                    throw new RuntimeException("UNION 查询暂不支持数据权限过滤，请联系管理员或重写查询");
+                }
+                throw new RuntimeException("复杂查询暂不支持数据权限过滤");
+            }
+
+            // 检查 CTE（WITH 子句）- CTE 在 JSqlParser 中也返回 PlainSelect，但带有 withItemsList
+            if (plainSelect.getWithItemsList() != null && !plainSelect.getWithItemsList().isEmpty()) {
+                throw new RuntimeException("CTE (WITH) 查询暂不支持数据权限过滤，请联系管理员或重写查询");
             }
 
             // 构建数据权限条件 Expression（AST 节点）
@@ -227,7 +249,8 @@ public class DataScopeInterceptor implements InnerInterceptor {
      * - regions 非空: 生成 region IN (...)
      * - 多条件之间用 OR 连接（取并集）
      *
-     * @param config 匹配到的表配置，决定使用哪些字段
+     * @param dataScope 当前用户数据范围
+     * @param config    匹配到的表配置，决定使用哪些字段
      * @return 构建好的 Expression，或 null 表示无需注入
      */
     private Expression buildDataScopeExpression(DataScope dataScope, TableConfig config) {
@@ -321,7 +344,7 @@ public class DataScopeInterceptor implements InnerInterceptor {
 
         InExpression inExpression = new InExpression();
         inExpression.setLeftExpression(new Column(columnName));
-        inExpression.setRightExpression(new ExpressionList<>(expressionList));
+        inExpression.setRightExpression(new Parenthesis(new ExpressionList<>(expressionList)));
         return inExpression;
     }
 
@@ -338,5 +361,57 @@ public class DataScopeInterceptor implements InnerInterceptor {
             result = new OrExpression(result, new Parenthesis(expressions.get(i)));
         }
         return new Parenthesis(result);
+    }
+
+    /**
+     * 精确匹配表名，避免 false positive
+     *
+     * 例如：t_order 不应匹配 t_order_items
+     *
+     * 匹配规则：
+     * - FROM table_name
+     * - JOIN table_name
+     * - FROM table_name AS alias
+     * - JOIN table_name AS alias
+     *
+     * @param lowerSql 小写的 SQL
+     * @param tableName 要匹配的表名
+     * @return 是否匹配
+     */
+    private boolean matchesTableName(String lowerSql, String tableName) {
+        String lowerTableName = tableName.toLowerCase();
+        // 使用正则表达式匹配表名边界
+        // 匹配 FROM/JOIN 后面的表名，后面紧跟空格、AS、括号或语句结束
+        String pattern = "(?:from|join)\\s+" + java.util.regex.Pattern.quote(lowerTableName) +
+                        "(?:\\s|$|\\s+as\\s|\\)|\\s*,)";
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern,
+                java.util.regex.Pattern.CASE_INSENSITIVE);
+        return p.matcher(lowerSql).find();
+    }
+
+    /**
+     * 判断是否为 SELECT 查询（包括 UNION/CTE 等复杂查询）
+     *
+     * @param sql SQL 语句
+     * @return 是否为 SELECT 查询
+     */
+    private boolean isSelectQuery(String sql) {
+        if (sql.length() < 6) {
+            return false;
+        }
+        String upperSql = sql.toUpperCase();
+        // 标准的 SELECT ... 查询
+        if (upperSql.startsWith("SELECT")) {
+            return true;
+        }
+        // (SELECT ...) UNION ... - 括号包裹的 SELECT
+        if (sql.startsWith("(") && upperSql.startsWith("(SELECT")) {
+            return true;
+        }
+        // WITH cte AS (...) SELECT ... - CTE 查询
+        if (upperSql.startsWith("WITH")) {
+            return true;
+        }
+        return false;
     }
 }

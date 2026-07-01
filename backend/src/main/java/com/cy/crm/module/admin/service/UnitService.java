@@ -44,7 +44,11 @@ public class UnitService extends ServiceImpl<UnitMapper, Unit> {
             throw new BusinessException(3002, "同区域内单位名称已存在");
         }
         Unit unit = unitConverter.requestToEntity(request);
-        unitMapper.insert(unit);
+        try {
+            unitMapper.insert(unit);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BusinessException(3002, "同区域内单位名称已存在");
+        }
     }
 
     public void update(UnitRequest request) {

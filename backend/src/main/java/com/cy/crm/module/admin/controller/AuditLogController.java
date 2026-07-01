@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cy.crm.module.admin.entity.AuditLog;
 import com.cy.crm.module.admin.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.Max;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -19,6 +21,7 @@ import java.util.List;
 /**
  * 审计日志控制器
  */
+@Validated
 @RestController
 @RequestMapping("/api/admin/audit-logs")
 @RequiredArgsConstructor
@@ -31,7 +34,7 @@ public class AuditLogController {
     @Operation(summary = "分页查询审计日志")
     public Page<AuditLog> pageAuditLogs(
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "20") Long size,
+            @RequestParam(defaultValue = "20") @Max(100) Long size,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String module,
             @RequestParam(required = false) String operation,

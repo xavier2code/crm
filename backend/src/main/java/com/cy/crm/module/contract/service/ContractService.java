@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.common.util.FieldMaskUtil;
+import com.cy.crm.security.DataScope;
+import com.cy.crm.security.DataScopeValidator;
+import com.cy.crm.security.SecurityContext;
 import com.cy.crm.module.admin.service.UserService;
 import com.cy.crm.module.auth.service.CurrentUserService;
 import com.cy.crm.module.contract.converter.ContractConverter;
@@ -13,6 +16,10 @@ import com.cy.crm.module.contract.entity.Contract;
 import com.cy.crm.module.contract.mapper.ContractMapper;
 import com.cy.crm.module.contract.vo.ContractVO;
 import com.cy.crm.module.notification.service.NotificationService;
+import com.cy.crm.module.opportunity.entity.Opportunity;
+import com.cy.crm.module.opportunity.mapper.OpportunityMapper;
+import com.cy.crm.module.customer.entity.Customer;
+import com.cy.crm.module.customer.mapper.CustomerMapper;
 import com.cy.crm.module.project.entity.Project;
 import com.cy.crm.module.project.mapper.ProjectMapper;
 import com.cy.crm.module.rebate.service.RebateService;
@@ -32,10 +39,13 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
 
     private final ContractMapper contractMapper;
     private final ProjectMapper projectMapper;
+    private final OpportunityMapper opportunityMapper;
+    private final CustomerMapper customerMapper;
     private final UserService userService;
     private final RebateService rebateService;
     private final NotificationService notificationService;
     private final CurrentUserService currentUserService;
+    private final DataScopeValidator dataScopeValidator;
 
     private final ContractConverter contractConverter;
 
@@ -58,7 +68,28 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
 
     public ContractVO getContractById(Long id) {
         Contract contract = contractMapper.selectById(id);
-        return contract != null ? toVO(contract) : null;
+        if (contract == null) {
+            return null;
+        }
+
+        // IDOR protection: validate access to this contract
+        Project project = projectMapper.selectById(contract.getProjectId());
+        if (project == null) {
+            // 项目不存在或当前用户无该项目访问权限，拒绝访问合同
+            return null;
+        }
+
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity != null) {
+            Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+            if (customer != null) {
+                Long currentUserId = SecurityContext.getCurrentUserId();
+                DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+                dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
+            }
+        }
+
+        return toVO(contract);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -75,7 +106,11 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
 
         Contract contract = contractConverter.requestToEntity(request);
         contract.setStatus(STATUS_PENDING);
-        contractMapper.insert(contract);
+        try {
+            contractMapper.insert(contract);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BusinessException(6001, "该项目已有合同");
+        }
 
         return contract.getId();
     }
@@ -85,6 +120,23 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
         Contract contract = contractMapper.selectById(id);
         if (contract == null) {
             throw BusinessException.resourceNotFound("合同");
+        }
+
+        // IDOR protection: validate access to this contract
+        Project project = projectMapper.selectById(contract.getProjectId());
+        if (project == null) {
+            // 项目不存在或当前用户无该项目访问权限，拒绝更新合同
+            throw BusinessException.dataScopeDenied();
+        }
+
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity != null) {
+            Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+            if (customer != null) {
+                Long currentUserId = SecurityContext.getCurrentUserId();
+                DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+                dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
+            }
         }
 
         contractConverter.updateEntityFromRequest(request, contract);
@@ -147,6 +199,7 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
             }
         } catch (Exception e) {
             log.error("合同 {} 生成返利失败：{}", contract.getId(), e.getMessage());
+            throw new BusinessException(6005, "合同状态更新失败：返利生成失败", e);
         }
     }
 

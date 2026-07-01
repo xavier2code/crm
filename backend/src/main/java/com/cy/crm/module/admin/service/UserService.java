@@ -56,7 +56,11 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         user.setPasswordHash(passwordEncoder.encode("123456"));
         user.setIsInitialPassword(1);
         user.setCreatedBy(operatorId);
-        userMapper.insert(user);
+        try {
+            userMapper.insert(user);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BusinessException(3001, "用户名已存在");
+        }
         saveUserRoles(user.getId(), request.getRoleIds());
     }
 

@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.module.admin.service.DictionaryService;
+import com.cy.crm.security.DataScope;
+import com.cy.crm.security.DataScopeValidator;
+import com.cy.crm.security.SecurityContext;
 import com.cy.crm.module.admin.service.UserService;
 import com.cy.crm.module.customer.entity.Customer;
 import com.cy.crm.module.customer.mapper.CustomerMapper;
@@ -44,6 +47,7 @@ public class FollowUpService extends ServiceImpl<FollowUpMapper, FollowUp> {
     private final ProjectService projectService;
     private final com.cy.crm.module.opportunity.service.OpportunityService opportunityService;
     private final FollowUpConverter followUpConverter;
+    private final DataScopeValidator dataScopeValidator;
 
     // 跟进记录下一步阶段对应的项目状态
     private static final List<String> INTERRUPT_STAGES = Arrays.asList(
@@ -191,15 +195,42 @@ public class FollowUpService extends ServiceImpl<FollowUpMapper, FollowUp> {
             throw BusinessException.resourceNotFound("跟进记录");
         }
 
+        // IDOR protection: validate access to the customer associated with this follow-up
+        Customer customer = customerMapper.selectById(followUp.getCustomerId());
+        if (customer == null) {
+            throw BusinessException.customerNotFound();
+        }
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+
         followUpConverter.updateEntityFromRequest(request, followUp);
         followUpMapper.updateById(followUp);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteFollowUp(Long id) {
+        FollowUp followUp = followUpMapper.selectById(id);
+        if (followUp == null) {
+            return;
+        }
+
+        // IDOR protection: validate access to the customer associated with this follow-up
+        Customer customer = customerMapper.selectById(followUp.getCustomerId());
+        if (customer == null) {
+            throw BusinessException.customerNotFound();
+        }
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateUnitAccess(currentUserId, customer.getUnitId(), currentDataScope);
+
         followUpMapper.deleteById(id);
     }
 
+    /**
+     * 判断用户是否仅拥有 BD 角色权限（用于数据范围过滤）
+     * BD 角色只能查看自己创建的跟进记录
+     */
     private boolean hasOnlyBDRole(List<Long> roleIds) {
         return roleIds != null && roleIds.size() == 1 && roleIds.contains(4L);
     }

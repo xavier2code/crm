@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.cy.crm.common.entity.AuditableEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 public class User extends AuditableEntity {
 
     private String username;
+    @ToString.Exclude
     private String passwordHash;
     private String realName;
     private String phone;

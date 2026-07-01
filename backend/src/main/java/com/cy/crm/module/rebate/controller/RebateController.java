@@ -9,13 +9,17 @@ import com.cy.crm.module.rebate.vo.RebateVO;
 import com.cy.crm.module.auth.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Tag(name = "返利管理")
+@Validated
 @RestController
 @RequestMapping("/api/rebates")
 @RequiredArgsConstructor
@@ -29,7 +33,7 @@ public class RebateController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Page<RebateVO>> pageRebates(
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "10") Long size,
+            @RequestParam(defaultValue = "10") @Max(100) Long size,
             @RequestParam(required = false) Long channelId,
             @RequestParam(required = false) Integer confirmStatus,
             @RequestParam(required = false) Integer paymentStatus
@@ -51,7 +55,7 @@ public class RebateController {
     @Operation(summary = "创建返利记录")
     @PostMapping
     @PreAuthorize("hasAuthority(T(com.cy.crm.common.constant.RoleConstants).CYBD)")
-    public ApiResult<Long> createRebate(@RequestBody RebateRequest request) {
+    public ApiResult<Long> createRebate(@Valid @RequestBody RebateRequest request) {
         return ApiResult.success(rebateService.createRebate(request));
     }
 
@@ -60,7 +64,7 @@ public class RebateController {
     @PreAuthorize("hasAuthority(T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Void> updateRebate(
             @PathVariable Long id,
-            @RequestBody RebateRequest request) {
+            @Valid @RequestBody RebateRequest request) {
         rebateService.updateRebate(id, request);
         return ApiResult.success();
     }
