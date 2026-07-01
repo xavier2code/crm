@@ -9,6 +9,7 @@ import com.cy.crm.module.rebate.vo.RebateVO;
 import com.cy.crm.module.auth.service.CurrentUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,7 +57,7 @@ public class RebateController {
     @Operation(summary = "创建返利记录")
     @PostMapping
     @PreAuthorize("hasAuthority(T(com.cy.crm.common.constant.RoleConstants).CYBD)")
-    public ApiResult<Long> createRebate(@RequestBody RebateRequest request) {
+    public ApiResult<Long> createRebate(@Valid @RequestBody RebateRequest request) {
         return ApiResult.success(rebateService.createRebate(request));
     }
 
@@ -65,7 +66,7 @@ public class RebateController {
     @PreAuthorize("hasAuthority(T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Void> updateRebate(
             @PathVariable Long id,
-            @RequestBody RebateRequest request) {
+            @Valid @RequestBody RebateRequest request) {
         rebateService.updateRebate(id, request);
         return ApiResult.success();
     }

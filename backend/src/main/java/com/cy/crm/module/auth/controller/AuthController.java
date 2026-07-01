@@ -43,7 +43,7 @@ public class AuthController {
 
     @Operation(summary = "刷新访问令牌")
     @PostMapping("/refresh")
-    public ApiResult<TokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+    public ApiResult<TokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         return ApiResult.ok(authService.refreshToken(request.getRefreshToken()));
     }
 

@@ -109,7 +109,7 @@ public class ProjectController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Void> updateMilestone(
             @PathVariable Long id,
-            @RequestBody ProjectDetailVO.MilestoneVO request) {
+            @Valid @RequestBody ProjectDetailVO.MilestoneVO request) {
         projectService.updateMilestone(id, request);
         return ApiResult.success();
     }
@@ -133,7 +133,7 @@ public class ProjectController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Long> addPaymentNode(
             @PathVariable Long id,
-            @RequestBody ProjectDetailVO.PaymentNodeVO request) {
+            @Valid @RequestBody ProjectDetailVO.PaymentNodeVO request) {
         return ApiResult.success(projectService.addPaymentNode(id, request));
     }
 
@@ -160,7 +160,7 @@ public class ProjectController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Long> saveBiddingNode(
             @PathVariable Long id,
-            @RequestBody BiddingNodeRequest request) {
+            @Valid @RequestBody BiddingNodeRequest request) {
         return ApiResult.success(biddingNodeService.saveBiddingNode(id, request));
     }
 
@@ -177,7 +177,7 @@ public class ProjectController {
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Long> saveContractNode(
             @PathVariable Long id,
-            @RequestBody ContractNodeRequest request) {
+            @Valid @RequestBody ContractNodeRequest request) {
         return ApiResult.success(contractNodeService.saveContractNode(id, request));
     }
 }
