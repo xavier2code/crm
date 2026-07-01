@@ -167,6 +167,7 @@ public class ContractNodeService extends ServiceImpl<ContractNodeMapper, Contrac
             log.info("项目 {} 触发返利生成，金额：{}", project.getId(), amount);
         } catch (Exception e) {
             log.error("生成返利失败：{}", e.getMessage());
+            throw new BusinessException(6005, "合同节点保存失败：返利生成失败", e);
         }
     }
 

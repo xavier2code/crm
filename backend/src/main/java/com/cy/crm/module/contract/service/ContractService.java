@@ -193,6 +193,7 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
             }
         } catch (Exception e) {
             log.error("合同 {} 生成返利失败：{}", contract.getId(), e.getMessage());
+            throw new BusinessException(6005, "合同状态更新失败：返利生成失败", e);
         }
     }
 
