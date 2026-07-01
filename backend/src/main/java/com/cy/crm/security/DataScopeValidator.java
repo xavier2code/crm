@@ -63,6 +63,12 @@ public class DataScopeValidator {
     /**
      * 验证用户是否有访问指定单位数据的权限
      *
+     * 关于 selfOnly 模式的说明：
+     * 当用户仅有 SELF_ONLY 权限且 requireOwn=false 时，该方法会拒绝访问。
+     * 原因是 SELF_ONLY 表示"只能看自己的数据"，但单位级资源并不天然属于某个用户，
+     * 因此必须显式要求 requireOwn=true 并通过数据权限表确认用户属于该单位，
+     * 才能允许访问。否则应拒绝，防止 self-only 用户通过单位 ID 越权访问。
+     *
      * @param userId 当前用户ID
      * @param unitId 要访问的单位ID
      * @param dataScope 用户的数据权限范围
@@ -73,6 +79,11 @@ public class DataScopeValidator {
 
     /**
      * 验证用户是否有访问指定单位数据的权限
+     *
+     * 关于 selfOnly 模式的说明：
+     * 当用户仅有 SELF_ONLY 权限且 requireOwn=false 时，该方法会拒绝访问。
+     * 必须显式设置 requireOwn=true 并通过数据权限表确认用户属于该单位，
+     * 才能允许 self-only 用户访问对应单位数据。
      *
      * @param userId 当前用户ID
      * @param unitId 要访问的单位ID
