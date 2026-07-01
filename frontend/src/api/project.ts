@@ -32,7 +32,9 @@ export function updateProjectStage6(id: number, stage6: number) {
   return request<void>({ url: `/projects/${id}/stage-6`, method: 'PUT', params: { stage6 } })
 }
 
-export function updateProjectMilestone(id: number, data: unknown) {
+type MilestoneVO = components['schemas']['MilestoneVO']
+
+export function updateProjectMilestone(id: number, data: MilestoneVO) {
   return request<void>({ url: `/projects/${id}/milestone`, method: 'PUT', data })
 }
 
