@@ -23,6 +23,23 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 public class RedisConfig {
 
     /**
+     * 创建安全的 PolymorphicTypeValidator
+     * 使用白名单类型验证器替代 LaissezFaireSubTypeValidator，防止反序列化 RCE
+     * 这个方法被生产代码和测试共享，确保配置一致性（DRY 原则）
+     *
+     * @return 配置好的 PolymorphicTypeValidator 实例
+     */
+    public static PolymorphicTypeValidator createSecureTypeValidator() {
+        return BasicPolymorphicTypeValidator.builder()
+                .allowIfBaseType(Object.class)
+                .allowIfSubType("java.")          // 允许标准库类型
+                .allowIfSubType("java.util.")
+                .allowIfSubType("java.lang.")
+                .allowIfSubType("com.cy.crm.")     // 仅允许项目自己的类
+                .build();
+    }
+
+    /**
      * 创建 RedisTemplate
      * 需要配置 redis.enabled=true 才会创建
      */
@@ -38,13 +55,7 @@ public class RedisConfig {
         Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
 
         // 使用白名单类型验证器替代 LaissezFaireSubTypeValidator
-        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
-                .allowIfBaseType(Object.class)
-                .allowIfSubType("java.")          // 允许标准库类型
-                .allowIfSubType("java.util.")
-                .allowIfSubType("java.lang.")
-                .allowIfSubType("com.cy.crm.")     // 仅允许项目自己的类
-                .build();
+        PolymorphicTypeValidator ptv = createSecureTypeValidator();
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
