@@ -6,8 +6,6 @@ import com.cy.crm.module.admin.vo.DictionaryVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
-
 import java.util.List;
 
 /**
@@ -16,8 +14,6 @@ import java.util.List;
  */
 @Mapper(componentModel = "spring")
 public interface DictionaryConverter {
-
-    DictionaryConverter INSTANCE = Mappers.getMapper(DictionaryConverter.class);
 
     /**
      * 请求 DTO -> 实体

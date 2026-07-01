@@ -6,16 +6,12 @@ import com.cy.crm.module.contract.vo.ContractVO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
-
 /**
  * 合同对象映射器
  * 符合开发文档 §38 MapStruct 映射规范
  */
 @Mapper(componentModel = "spring")
 public interface ContractConverter {
-
-    ContractConverter INSTANCE = Mappers.getMapper(ContractConverter.class);
 
     /**
      * 请求 DTO -> 实体
