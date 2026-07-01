@@ -1,3 +1,5 @@
+import type { CurrentUser } from '@/types/app'
+
 import { request } from './client'
 
 export interface LoginParams {
@@ -6,20 +8,10 @@ export interface LoginParams {
 }
 
 export interface LoginResult {
-  token: string
-  userId: number
-  username: string
-  name: string
+  accessToken: string
+  userInfo: CurrentUser
   roles: string[]
-}
-
-export interface CurrentUser {
-  id: number
-  username: string
-  name: string
-  email?: string
-  phone?: string
-  roles: string[]
+  permissionCodes: string[]
 }
 
 export const login = (params: LoginParams) =>

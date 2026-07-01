@@ -47,7 +47,7 @@ export default function BasicLayout() {
           <Dropdown menu={{ items: dropdownItems }} placement="bottomRight">
             <Space style={{ cursor: 'pointer' }}>
               <Avatar icon={<UserOutlined />} />
-              <span>{user?.name || user?.username}</span>
+              <span>{user?.realName || user?.username}</span>
               <DownOutlined />
             </Space>
           </Dropdown>
