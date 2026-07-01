@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cy.crm.module.admin.entity.AuditLog;
 import com.cy.crm.module.admin.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.Max;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ public class AuditLogController {
     @Operation(summary = "分页查询审计日志")
     public Page<AuditLog> pageAuditLogs(
             @RequestParam(defaultValue = "1") Long current,
-            @RequestParam(defaultValue = "20") Long size,
+            @RequestParam(defaultValue = "20") @Max(100) Long size,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String module,
             @RequestParam(required = false) String operation,
