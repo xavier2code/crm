@@ -5,7 +5,6 @@ import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.security.DataScope;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.Alias;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.Parenthesis;
@@ -13,19 +12,13 @@ import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.FromItem;
-import net.sf.jsqlparser.statement.select.Join;
-import net.sf.jsqlparser.statement.select.ParenthesedSelect;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectVisitor;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import org.apache.ibatis.executor.Executor;
@@ -57,21 +50,21 @@ public class DataScopeInterceptor implements InnerInterceptor {
      * 表权限配置：表名 -> 该表支持的权限字段映射
      *
      * 说明：
-     * - t_customer: 标准单位/区域/创建者模型（注意：DDL 中没有 channel_id）
-     * - t_opportunity: 配置保留原样，DDL 中无 channel_id/region，属于独立问题
-     * - t_contract: 通过 project_id 关联 t_project 做 EXISTS 子查询
+     * - t_customer: 标准单位/区域/创建者模型
+     * - t_opportunity: 配置保留原样
      * - t_order: 简化处理，使用 created_by 做 self-only 兜底
-     * - t_project: 使用 owner_bd_id / sales_user_id 做权限控制（DDL 中无 created_by）
-     * - t_follow_up: 通过 customer_id 关联 t_customer 做 EXISTS 子查询
+     * - t_project: 使用 owner_bd_id / sales_user_id 做权限控制
      * - t_rebate: 标准渠道/创建者模型
      */
     private static final TableConfig T_CUSTOMER = new TableConfig("t_customer",
+            new FieldMapping("channel_id", FieldType.CHANNEL_ID),
             new FieldMapping("unit_id", FieldType.UNIT_ID),
             new FieldMapping("region", FieldType.REGION),
             new FieldMapping("owner_user_id", FieldType.OWNER),
             new FieldMapping("created_by", FieldType.CREATED_BY));
 
     private static final TableConfig T_PROJECT = new TableConfig("t_project",
+            new FieldMapping("created_by", FieldType.CREATED_BY),
             new FieldMapping("owner_bd_id", FieldType.OWNER),
             new FieldMapping("sales_user_id", FieldType.OWNER));
 
@@ -81,11 +74,9 @@ public class DataScopeInterceptor implements InnerInterceptor {
                     new FieldMapping("channel_id", FieldType.CHANNEL_ID),
                     new FieldMapping("region", FieldType.REGION),
                     new FieldMapping("submitted_by", FieldType.CREATED_BY)),
-            new TableConfig("t_contract", "project_id", "t_project", T_PROJECT),
             new TableConfig("t_order",
                     new FieldMapping("created_by", FieldType.CREATED_BY)),
             T_PROJECT,
-            new TableConfig("t_follow_up", "customer_id", "t_customer", T_CUSTOMER),
             new TableConfig("t_rebate",
                     new FieldMapping("channel_id", FieldType.CHANNEL_ID),
                     new FieldMapping("owner_user_id", FieldType.OWNER),
@@ -103,13 +94,6 @@ public class DataScopeInterceptor implements InnerInterceptor {
         CREATED_BY    // 对应当前用户ID（self-only）
     }
 
-    /**
-     * 表配置类型
-     */
-    private enum TableConfigType {
-        DIRECT,   // 直接在当前表上过滤
-        EXISTS    // 通过 EXISTS 子查询关联父表
-    }
 
     /**
      * 字段映射：数据库字段名 -> 字段类型
@@ -122,19 +106,8 @@ public class DataScopeInterceptor implements InnerInterceptor {
      */
     private record TableConfig(
             String tableName,
-            TableConfigType configType,
-            String localJoinColumn,   // EXISTS 时使用：子表外键
-            String parentTable,       // EXISTS 时使用：父表名
-            TableConfig parentConfig, // EXISTS 时使用：父表配置
             FieldMapping... fields
     ) {
-        TableConfig(String tableName, FieldMapping... fields) {
-            this(tableName, TableConfigType.DIRECT, null, null, null, fields);
-        }
-
-        TableConfig(String tableName, String localJoinColumn, String parentTable, TableConfig parentConfig) {
-            this(tableName, TableConfigType.EXISTS, localJoinColumn, parentTable, parentConfig);
-        }
     }
 
     @Override
@@ -188,10 +161,6 @@ public class DataScopeInterceptor implements InnerInterceptor {
                 if (select.getSelectBody() instanceof SetOperationList) {
                     throw new RuntimeException("UNION 查询暂不支持数据权限过滤，请联系管理员或重写查询");
                 }
-                // CTE (WITH) 查询会使用其他类型
-                if (select.toString().toUpperCase().startsWith("WITH")) {
-                    throw new RuntimeException("CTE (WITH) 查询暂不支持数据权限过滤，请联系管理员或重写查询");
-                }
                 throw new RuntimeException("复杂查询暂不支持数据权限过滤");
             }
 
@@ -201,7 +170,7 @@ public class DataScopeInterceptor implements InnerInterceptor {
             }
 
             // 构建数据权限条件 Expression（AST 节点）
-            Expression dataScopeExpression = buildDataScopeExpression(dataScope, matchedConfig, plainSelect);
+            Expression dataScopeExpression = buildDataScopeExpression(dataScope, matchedConfig);
             if (dataScopeExpression == null) {
                 return; // 没有可注入的条件
             }
@@ -275,104 +244,17 @@ public class DataScopeInterceptor implements InnerInterceptor {
      * 构建数据权限条件 Expression（JSqlParser AST 节点）
      *
      * 规则：
-     * - DIRECT 表：沿用原有字段过滤逻辑
-     * - EXISTS 表：构建 EXISTS 子查询关联父表，复用父表的字段过滤逻辑
-     *
-     * @param dataScope   当前用户数据范围
-     * @param config      匹配到的表配置
-     * @param plainSelect 当前查询的 PlainSelect，用于获取子表别名
-     * @return 构建好的 Expression，或 null 表示无需注入
-     */
-    private Expression buildDataScopeExpression(DataScope dataScope, TableConfig config, PlainSelect plainSelect) {
-        if (config.configType() == TableConfigType.EXISTS) {
-            return buildExistsExpression(dataScope, config, plainSelect);
-        }
-        return buildDirectExpression(dataScope, config);
-    }
-
-    /**
-     * 构建 EXISTS 子查询条件
-     *
-     * 结构：EXISTS (SELECT 1 FROM parent_table AS ds_parent
-     *             WHERE ds_parent.id = child_alias.local_join_column
-     *               AND (parent_data_scope_conditions))
-     */
-    private Expression buildExistsExpression(DataScope dataScope, TableConfig config, PlainSelect plainSelect) {
-        Expression parentScopeExpression = buildDirectExpression(dataScope, config.parentConfig());
-        if (parentScopeExpression == null) {
-            return null; // 父表无权限限制，子表也无需注入
-        }
-
-        String childAlias = getChildTableAlias(plainSelect, config.tableName());
-        String parentAlias = "ds_" + config.parentTable().substring(2);
-
-        // 关联条件：parent_alias.id = child_alias.localJoinColumn
-        Expression joinCondition = new EqualsTo(
-                new Column(new Table(parentAlias), "id"),
-                new Column(new Table(childAlias), config.localJoinColumn())
-        );
-
-        // 子查询 WHERE：关联条件 AND 父表数据权限条件
-        Expression subWhere = new AndExpression(
-                new Parenthesis(joinCondition),
-                new Parenthesis(parentScopeExpression)
-        );
-
-        // 构建子查询：SELECT 1 FROM parent_table AS parent_alias WHERE ...
-        PlainSelect subSelect = new PlainSelect();
-        subSelect.setSelectItems(List.of(new SelectItem<>(new LongValue(1))));
-        Table parentTable = new Table(config.parentTable());
-        parentTable.setAlias(new Alias(parentAlias));
-        subSelect.setFromItem(parentTable);
-        subSelect.setWhere(subWhere);
-
-        ParenthesedSelect parenthesedSelect = new ParenthesedSelect();
-        parenthesedSelect.setSelect(subSelect);
-
-        ExistsExpression exists = new ExistsExpression();
-        exists.setRightExpression(parenthesedSelect);
-        return exists;
-    }
-
-    /**
-     * 获取子表在 SQL 中的别名；未使用别名时返回表名本身
-     */
-    private String getChildTableAlias(PlainSelect plainSelect, String tableName) {
-        FromItem fromItem = plainSelect.getFromItem();
-        if (fromItem instanceof Table table) {
-            if (tableName.equalsIgnoreCase(table.getName()) && table.getAlias() != null) {
-                return table.getAlias().getName();
-            }
-        }
-
-        List<Join> joins = plainSelect.getJoins();
-        if (joins != null) {
-            for (Join join : joins) {
-                FromItem rightItem = join.getRightItem();
-                if (rightItem instanceof Table table) {
-                    if (tableName.equalsIgnoreCase(table.getName()) && table.getAlias() != null) {
-                        return table.getAlias().getName();
-                    }
-                }
-            }
-        }
-        return tableName;
-    }
-
-    /**
-     * 构建直接字段过滤条件（原逻辑）
-     *
-     * 规则：
      * - selfOnly=true: 使用表配置中的 OWNER/CREATED_BY 字段，生成 column = userId
      * - channelIds 非空: 生成 channel_id IN (...)
      * - unitIds 非空: 生成 unit_id IN (...)
      * - regions 非空: 生成 region IN (...)
      * - 多条件之间用 OR 连接（取并集）
      *
-     * @param config 匹配到的表配置，决定使用哪些字段
+     * @param dataScope 当前用户数据范围
+     * @param config    匹配到的表配置，决定使用哪些字段
      * @return 构建好的 Expression，或 null 表示无需注入
      */
-    private Expression buildDirectExpression(DataScope dataScope, TableConfig config) {
+    private Expression buildDataScopeExpression(DataScope dataScope, TableConfig config) {
         List<Expression> conditions = new ArrayList<>();
         Long currentUserId = getCurrentUserId();
 

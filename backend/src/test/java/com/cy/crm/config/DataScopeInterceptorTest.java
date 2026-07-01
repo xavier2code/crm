@@ -20,13 +20,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 数据权限拦截器单元测试
- * 验证 EXISTS 子查询正确注入到 t_contract / t_follow_up 查询中
  */
 @ExtendWith(MockitoExtension.class)
 class DataScopeInterceptorTest {
@@ -54,75 +52,6 @@ class DataScopeInterceptorTest {
     }
 
     @Test
-    void shouldInjectExistsForContract_withSelfOnly() {
-        String sql = "SELECT * FROM t_contract WHERE status = 1";
-        BoundSql boundSql = newBoundSql(sql);
-
-        interceptor.beforeQuery(executor, mappedStatement, null, null, resultHandler, boundSql);
-
-        String newSql = boundSql.getSql().toLowerCase();
-        assertTrue(newSql.contains("exists"), "应注入 EXISTS 子查询");
-        assertTrue(newSql.contains("t_project"), "应关联 t_project");
-        assertTrue(newSql.contains("project_id"), "应使用 project_id 关联");
-        assertTrue(newSql.contains("owner_bd_id"), "应使用 owner_bd_id 做 self-only 过滤");
-        assertFalse(newSql.contains("t_contract.created_by"), "不应引用 t_contract 不存在的 created_by");
-    }
-
-    @Test
-    void shouldInjectExistsForFollowUp_withSelfOnly() {
-        String sql = "SELECT * FROM t_follow_up WHERE customer_id = 10 ORDER BY follow_up_date DESC";
-        BoundSql boundSql = newBoundSql(sql);
-
-        interceptor.beforeQuery(executor, mappedStatement, null, null, resultHandler, boundSql);
-
-        String newSql = boundSql.getSql().toLowerCase();
-        assertTrue(newSql.contains("exists"), "应注入 EXISTS 子查询");
-        assertTrue(newSql.contains("t_customer"), "应关联 t_customer");
-        assertTrue(newSql.contains("customer_id"), "应使用 customer_id 关联");
-        assertTrue(newSql.contains("owner_user_id"), "应使用 owner_user_id 做 self-only 过滤");
-        assertFalse(newSql.contains("t_follow_up.created_by"), "不应在 WHERE 中使用 t_follow_up.created_by 兜底");
-    }
-
-    @Test
-    void shouldInjectExistsForFollowUp_withUnitIds() {
-        setAuthentication(unitScope(List.of(1L, 2L)));
-        String sql = "SELECT * FROM t_follow_up";
-        BoundSql boundSql = newBoundSql(sql);
-
-        interceptor.beforeQuery(executor, mappedStatement, null, null, resultHandler, boundSql);
-
-        String newSql = boundSql.getSql().toLowerCase();
-        assertTrue(newSql.contains("exists"), "应注入 EXISTS 子查询");
-        assertTrue(newSql.contains("unit_id"), "应在子查询中注入 unit_id 条件");
-        assertTrue(newSql.contains("unit_id in (1, 2)"), "应生成 IN (1, 2) 列表");
-    }
-
-    @Test
-    void shouldInjectExistsForFollowUp_withRegions() {
-        setAuthentication(regionScope(List.of("湖北", "湖南")));
-        String sql = "SELECT * FROM t_follow_up";
-        BoundSql boundSql = newBoundSql(sql);
-
-        interceptor.beforeQuery(executor, mappedStatement, null, null, resultHandler, boundSql);
-
-        String newSql = boundSql.getSql().toLowerCase();
-        assertTrue(newSql.contains("exists"), "应注入 EXISTS 子查询");
-        assertTrue(newSql.contains("region in"), "应在子查询中注入 region IN 条件");
-        assertTrue(newSql.contains("'湖北'") && newSql.contains("'湖南'"), "应包含区域值");
-    }
-
-    @Test
-    void shouldHandleTableAlias() {
-        String sql = "SELECT c.* FROM t_contract c WHERE c.status = 1";
-        BoundSql boundSql = newBoundSql(sql);
-
-        interceptor.beforeQuery(executor, mappedStatement, null, null, resultHandler, boundSql);
-
-        String newSql = boundSql.getSql();
-        assertTrue(newSql.contains("c.project_id"), "EXISTS 子查询应使用子表别名 c");
-    }
-
-    @Test
     void shouldNotModify_whenAllPermission() {
         setAuthentication(DataScope.all());
         String sql = "SELECT * FROM t_contract";
@@ -145,7 +74,7 @@ class DataScopeInterceptorTest {
 
     @Test
     void shouldStillBeValidSql_afterInjection() throws Exception {
-        String sql = "SELECT * FROM t_contract WHERE status = 1";
+        String sql = "SELECT * FROM t_customer WHERE status = 1";
         BoundSql boundSql = newBoundSql(sql);
 
         interceptor.beforeQuery(executor, mappedStatement, null, null, resultHandler, boundSql);
@@ -176,18 +105,6 @@ class DataScopeInterceptorTest {
     private DataScope selfOnlyScope() {
         DataScope scope = new DataScope();
         scope.setSelfOnly(true);
-        return scope;
-    }
-
-    private DataScope unitScope(List<Long> unitIds) {
-        DataScope scope = new DataScope();
-        scope.setUnitIds(unitIds);
-        return scope;
-    }
-
-    private DataScope regionScope(List<String> regions) {
-        DataScope scope = new DataScope();
-        scope.setRegions(regions);
         return scope;
     }
 
