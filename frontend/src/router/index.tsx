@@ -93,9 +93,6 @@ function buildRoutesFromMenus(menus: MenuItem[]): RouteObject[] {
 export function useRoutes() {
   const { menus } = useMenuStore()
 
-  const token = useAuthStore((state) => state.token)
-  const permissionCodes = useAuthStore((state) => state.permissionCodes)
-
   return useMemo<RouteObject[]>(() => {
     const dynamicRoutes = buildRoutesFromMenus(menus)
 
@@ -139,7 +136,7 @@ export function useRoutes() {
         element: <Navigate to="/login" replace />,
       },
     ]
-  }, [menus, token, permissionCodes])
+  }, [menus])
 }
 
 export function Router() {
