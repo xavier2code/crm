@@ -1,9 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider } from 'react-router-dom'
 import { ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 
-import { router } from '@/router'
+import { Router } from '@/router'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,7 +17,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ConfigProvider locale={zhCN}>
-        <RouterProvider router={router} />
+        <Router />
       </ConfigProvider>
     </QueryClientProvider>
   )

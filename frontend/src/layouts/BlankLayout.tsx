@@ -1,5 +1,9 @@
 import { Outlet } from 'react-router-dom'
 
-export default function BlankLayout() {
-  return <Outlet />
+interface BlankLayoutProps {
+  children?: React.ReactNode
+}
+
+export default function BlankLayout({ children }: BlankLayoutProps) {
+  return children ? <>{children}</> : <Outlet />
 }
