@@ -23,4 +23,7 @@ public class DictionaryVO {
 
     @Schema(description = "备注")
     private String remark;
+
+    @Schema(description = "是否预置")
+    private Integer isBuiltin;
 }

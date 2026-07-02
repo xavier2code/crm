@@ -15,4 +15,5 @@ public class Dictionary extends BaseEntity {
     private String name;
     private Integer sort;
     private String remark;
+    private Integer isBuiltin;
 }
