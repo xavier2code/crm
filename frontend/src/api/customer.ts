@@ -2,10 +2,11 @@ import type { components } from '@/types/api'
 
 import { request } from './client'
 
-type CustomerPage = components['schemas']['PageCustomerVO']
-type CustomerVO = components['schemas']['CustomerVO']
-type CustomerRequest = components['schemas']['CustomerRequest']
-type ContactRequest = components['schemas']['ContactRequest']
+export type CustomerPage = components['schemas']['PageCustomerVO']
+export type CustomerVO = components['schemas']['CustomerVO']
+export type CustomerRequest = components['schemas']['CustomerRequest']
+export type ContactRequest = components['schemas']['ContactRequest']
+export type ContactVO = components['schemas']['ContactVO']
 
 export function getCustomers(params: { current?: number; size?: number; keyword?: string }) {
   return request<CustomerPage>({ url: '/customers', method: 'GET', params })

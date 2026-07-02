@@ -6,6 +6,10 @@ import {
   createCustomer,
   updateCustomer,
   deleteCustomer,
+  assignCustomer,
+  addContact,
+  updateContact,
+  deleteContact,
 } from '@/api/customer'
 
 export function useCustomers(params: Parameters<typeof getCustomers>[0]) {
@@ -51,6 +55,52 @@ export function useDeleteCustomer() {
     mutationFn: deleteCustomer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] })
+    },
+  })
+}
+
+export function useAssignCustomer() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, userId }: { id: number; userId: number }) => assignCustomer(id, userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+      queryClient.invalidateQueries({ queryKey: ['customer', variables.id] })
+    },
+  })
+}
+
+export function useAddContact() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ customerId, data }: { customerId: number; data: Parameters<typeof addContact>[1] }) =>
+      addContact(customerId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['customer', variables.customerId] })
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+    },
+  })
+}
+
+export function useUpdateContact() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateContact>[1] }) =>
+      updateContact(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+      queryClient.invalidateQueries({ queryKey: ['customer'] })
+    },
+  })
+}
+
+export function useDeleteContact() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteContact,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+      queryClient.invalidateQueries({ queryKey: ['customer'] })
     },
   })
 }
