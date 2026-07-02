@@ -1,5 +1,6 @@
 package com.cy.crm.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +10,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Component
@@ -18,11 +20,13 @@ public class JwtUtil {
     private final long accessExpire;
     private final long refreshExpire;
     private final String issuer;
+    private final ObjectMapper objectMapper;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
                    @Value("${jwt.access-expire}") long accessExpire,
                    @Value("${jwt.refresh-expire}") long refreshExpire,
-                   @Value("${jwt.issuer:crm-system}") String issuer) {
+                   @Value("${jwt.issuer:crm-system}") String issuer,
+                   ObjectMapper objectMapper) {
         if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
             throw new IllegalArgumentException(
                 "JWT secret must be at least 32 bytes, configured via JWT_SECRET environment variable");
@@ -31,6 +35,7 @@ public class JwtUtil {
         this.accessExpire = accessExpire;
         this.refreshExpire = refreshExpire;
         this.issuer = issuer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -130,9 +135,21 @@ public class JwtUtil {
 
     /**
      * 提取数据权限范围
+     * JJWT 默认不会将复杂 claim 自动反序列化为 POJO，需要借助 ObjectMapper 手动转换。
      */
     public DataScope extractDataScope(String token) {
-        return parseClaims(token).get("dataScope", DataScope.class);
+        Claims claims = parseClaims(token);
+        Object raw = claims.get("dataScope");
+        if (raw == null) {
+            return DataScope.empty();
+        }
+        if (raw instanceof DataScope) {
+            return (DataScope) raw;
+        }
+        if (raw instanceof Map) {
+            return objectMapper.convertValue(raw, DataScope.class);
+        }
+        return DataScope.empty();
     }
 
     /**

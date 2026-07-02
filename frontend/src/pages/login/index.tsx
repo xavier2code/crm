@@ -8,7 +8,6 @@ import { useDictStore } from '@/stores/dict'
 import { login, fetchCurrentUser, fetchDictionaries } from '@/api/auth'
 import CaptchaInput from '@/components/CaptchaInput'
 import type { CaptchaInputRef, CaptchaInputValue } from '@/components/CaptchaInput'
-import type { DictionaryItem } from '@/stores/dict'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -34,12 +33,7 @@ export default function LoginPage() {
       useMenuStore.getState().setMenus(result.menuTree || [])
 
       const dicts = await fetchDictionaries()
-      const dictMap: Record<string, DictionaryItem[]> = {}
-      dicts.forEach((item) => {
-        if (!dictMap[item.type]) dictMap[item.type] = []
-        dictMap[item.type].push(item)
-      })
-      useDictStore.getState().setDicts(dictMap)
+      useDictStore.getState().setDicts(dicts)
 
       const user = await fetchCurrentUser()
       setUser(user)

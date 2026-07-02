@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { ComponentType } from 'react'
-import { Layout, Menu, Dropdown, Button, Space, Badge } from 'antd'
+import { Layout, Menu, Dropdown, Button, Space, Badge, type MenuProps } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import * as Icons from '@ant-design/icons'
 import {
@@ -17,23 +17,38 @@ import type { MenuItem } from '@/types/app'
 
 const { Header, Sider, Content } = Layout
 
-function renderMenuItems(items: MenuItem[]): { key: string; icon: React.ReactNode; label: string; children?: ReturnType<typeof renderMenuItems> }[] {
+// 数据库中存储的 icon 名称与 @ant-design/icons 实际导出名称的映射
+const ICON_NAME_MAP: Record<string, string> = {
+  Dashboard: 'DashboardOutlined',
+  Customer: 'TeamOutlined',
+  Opportunity: 'FileTextOutlined',
+  Project: 'ProjectOutlined',
+  Business: 'DollarOutlined',
+  System: 'SettingOutlined',
+}
+
+function renderMenuItems(items: MenuItem[]): NonNullable<MenuProps['items']> {
   return items.map((item) => {
-    const IconComponent = item.icon ? (Icons as unknown as Record<string, ComponentType>)[item.icon] : null
+    const mappedIconName = item.icon ? ICON_NAME_MAP[item.icon] || item.icon : null
+    const IconComponent = mappedIconName
+      ? (Icons as unknown as Record<string, ComponentType>)[mappedIconName]
+      : null
+    const icon = IconComponent ? <IconComponent /> : undefined
+
     if (item.children && item.children.length > 0) {
       return {
         key: item.path || String(item.id),
-        icon: IconComponent ? <IconComponent /> : null,
+        icon,
         label: item.name,
         children: renderMenuItems(item.children),
       }
     }
     return {
       key: item.path || String(item.id),
-      icon: IconComponent ? <IconComponent /> : null,
+      icon,
       label: item.name,
     }
-  })
+  }) as NonNullable<MenuProps['items']>
 }
 
 export default function BasicLayout() {

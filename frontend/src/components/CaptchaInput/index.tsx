@@ -26,6 +26,11 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
     const [error, setError] = useState(false)
     const mountedRef = useRef(true)
     const loadingRef = useRef(false)
+    const onChangeRef = useRef(onChange)
+
+    // 保持 onChange 引用最新，避免父组件（如 Form.Item）每次渲染传入新函数
+    // 导致 refresh 的 useCallback/useEffect 重复执行
+    onChangeRef.current = onChange
 
     const refresh = useCallback(async () => {
       if (loadingRef.current) return
@@ -37,7 +42,7 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
         if (!mountedRef.current) return
         setUuid(res.uuid)
         setImage(res.image)
-        onChange?.({ captchaUuid: res.uuid, captchaCode: '' })
+        onChangeRef.current?.({ captchaUuid: res.uuid, captchaCode: '' })
       } catch {
         if (mountedRef.current) {
           setError(true)
@@ -48,11 +53,14 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
         if (mountedRef.current) setLoading(false)
         loadingRef.current = false
       }
-    }, [onChange])
+    }, [])
 
     useImperativeHandle(ref, () => ({ refresh }))
 
     useEffect(() => {
+      // React StrictMode 会模拟卸载再挂载，清理函数会把 mountedRef 设为 false。
+      // 重新挂载后必须重置为 true，否则请求完成时无法更新 loading/image 状态。
+      mountedRef.current = true
       refresh()
       return () => {
         mountedRef.current = false
@@ -60,7 +68,7 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
     }, [refresh])
 
     const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      onChange?.({ captchaUuid: uuid, captchaCode: e.target.value })
+      onChangeRef.current?.({ captchaUuid: uuid, captchaCode: e.target.value })
     }
 
     return (

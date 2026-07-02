@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 import type { MenuItem } from '@/types/app'
 
@@ -8,8 +9,13 @@ interface MenuState {
   clearMenus: () => void
 }
 
-export const useMenuStore = create<MenuState>((set) => ({
-  menus: [],
-  setMenus: (menus) => set({ menus }),
-  clearMenus: () => set({ menus: [] }),
-}))
+export const useMenuStore = create<MenuState>()(
+  persist(
+    (set) => ({
+      menus: [],
+      setMenus: (menus) => set({ menus }),
+      clearMenus: () => set({ menus: [] }),
+    }),
+    { name: 'crm-menus' }
+  )
+)

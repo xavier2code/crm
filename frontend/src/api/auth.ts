@@ -36,5 +36,5 @@ export const fetchCurrentUser = () => request<CurrentUser>({ method: 'GET', url:
 export const logout = () => request<void>({ method: 'POST', url: '/auth/logout' })
 
 export function fetchDictionaries() {
-  return request<DictionaryItem[]>({ url: '/admin/dictionaries', method: 'GET' })
+  return request<Record<string, DictionaryItem[]>>({ url: '/admin/dictionaries', method: 'GET' })
 }

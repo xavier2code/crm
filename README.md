@@ -1,31 +1,56 @@
 # CRM 管理系统
 
+[![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
+[![Gradle](https://img.shields.io/badge/Gradle-8.7-02303A?logo=gradle)](https://gradle.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite)](https://vitejs.dev/)
+[![Ant Design](https://img.shields.io/badge/Ant%20Design-6-1677FF?logo=antdesign)](https://ant.design/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-optional-DC382D?logo=redis)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/Docker-supported-2496ED?logo=docker)](https://www.docker.com/)
+
 前后端分离的 CRM 系统基础框架。
 
 ## 技术栈
 
-- 前端：React 19 + TypeScript 6 + Vite 8 + Ant Design 6 + TanStack Query 5 + Zustand 5
-- 后端：Spring Boot 3.2 + Spring Security + JWT + MyBatis-Plus + Flyway + JDK 21
-- 构建工具：Gradle 8.7
-- 数据库：PostgreSQL（生产/外部开发环境），H2（默认本地开发）
-- 缓存：Redis（可选）
+- **前端**：React 19 + TypeScript 6 + Vite 8 + Ant Design 6 + React Router 7 + TanStack Query 5 + Zustand 5
+- **后端**：Spring Boot 3.2 + Spring Security + JWT + MyBatis-Plus + Flyway + JDK 21
+- **构建工具**：Gradle 8.7
+- **数据库**：PostgreSQL（生产 / 外部开发环境），H2（默认本地开发）
+- **缓存**：Redis（可选，默认未启用）
 
 ## 项目结构
 
 ```
 crm/
-├── frontend/      # 前端工程（Vite + React）
-├── backend/       # 后端工程（Spring Boot）
-└── docker-compose.yml
+├── frontend/              # 前端工程（Vite + React + TypeScript）
+│   ├── src/
+│   │   ├── api/           # API 请求
+│   │   ├── components/    # 公共组件
+│   │   ├── layouts/       # 页面布局
+│   │   ├── pages/         # 页面
+│   │   ├── router/        # 路由配置
+│   │   ├── stores/        # Zustand 状态管理
+│   │   └── utils/         # 工具函数
+│   └── package.json
+├── backend/               # 后端工程（Spring Boot）
+│   ├── src/main/java/     # Java 源码
+│   ├── src/main/resources/db/migration/  # Flyway 迁移脚本
+│   └── build.gradle
+├── docker-compose.yml     # 全栈 Docker 启动
+└── README.md
 ```
 
-## 模块
+## 功能模块
 
-- 工作台
+- 工作台（Dashboard）
 - 客户管理
 - 商机管理
-- 商务管理（合同）
-- 后台管理（用户、角色、部门、字典）
+- 项目管理
+- 商务管理（合同、返利）
+- 系统管理（用户、角色、字典、单位、渠道、审计日志）
 
 ## 角色权限
 
@@ -54,10 +79,12 @@ npm run dev          # 开发服务器，访问 http://localhost:8000
 
 ```bash
 cd backend
-./gradlew bootRun
+JWT_SECRET="your-32-byte-or-longer-secret-key" ./gradlew bootRun
 ```
 
 后端默认端口 `8080`，使用 H2 内存数据库并开启 `/h2-console`。
+
+> 注意：`JWT_SECRET` 必须不少于 32 字节，否则应用启动会失败。
 
 #### 方式二：连接外部 PostgreSQL + Redis
 
@@ -101,7 +128,7 @@ docker-compose up --build
 
 - 前端代码规范使用 ESLint + Prettier，提交前运行 `npm run lint`。
 - 后端使用 Lombok，JDK 21。
-- 前后端均使用 TypeScript/Java 类型生成与校验。
+- 数据库迁移脚本放在 `backend/src/main/resources/db/migration/`，Flyway 启动时自动执行。
 
 ## 常用命令
 
@@ -114,7 +141,6 @@ npm run build      # 类型检查 + 生产构建
 npm run lint       # ESLint
 npm run format     # Prettier 格式化
 npm run preview    # 预览生产构建
-npm run gen:api    # 从后端 /v3/api-docs 生成 TypeScript 类型
 ```
 
 ### 后端
@@ -133,7 +159,7 @@ cd backend
 
 后端启动后访问：`http://localhost:8080/doc.html`（Knife4j）。
 
-## 账号
+## 默认账号
 
 本地开发默认账号：
 
@@ -141,3 +167,5 @@ cd backend
 - sales / 123456
 - business / 123456
 - finance / 123456
+
+> 开发环境未启用 Redis 时，验证码校验会被跳过，任意输入即可通过。
