@@ -54,6 +54,32 @@ wait_for_port_free() {
   return 1
 }
 
+# 停止指定 PID 的 CRM 后端进程，失败返回非零
+stop_crm_by_pid() {
+  local pid=$1
+  echo "==> 正在停止 CRM 后端服务 (PID: $pid) ..."
+  kill -15 "$pid"
+  if wait_for_exit "$pid"; then
+    echo "==> 服务已停止"
+  else
+    echo "==> 服务未在 10 秒内退出，强制终止 ..."
+    kill -9 "$pid" 2>/dev/null || true
+    sleep 1
+    if [ -z "$(find_pid_on_port)" ]; then
+      echo "==> 服务已停止"
+    else
+      echo "ERROR: 无法停止服务 (PID: $pid)"
+      return 1
+    fi
+  fi
+
+  # 最终确认端口已释放
+  if ! wait_for_port_free; then
+    echo "ERROR: 端口 $PORT 仍未释放，请手动处理。"
+    return 1
+  fi
+}
+
 # 停止 CRM 后端服务
 stop_service() {
   local pid
@@ -64,29 +90,9 @@ stop_service() {
   fi
 
   if is_crm_process "$pid"; then
-    echo "==> 正在停止 CRM 后端服务 (PID: $pid) ..."
-    kill -15 "$pid"
-    if wait_for_exit "$pid"; then
-      echo "==> 服务已停止"
-    else
-      echo "==> 服务未在 10 秒内退出，强制终止 ..."
-      kill -9 "$pid" 2>/dev/null || true
-      sleep 1
-      if [ -z "$(find_pid_on_port)" ]; then
-        echo "==> 服务已停止"
-      else
-        echo "ERROR: 无法停止服务 (PID: $pid)"
-        exit 1
-      fi
-    fi
+    stop_crm_by_pid "$pid"
   else
     echo "ERROR: 端口 $PORT 被其他进程占用 (PID: $pid)，请手动处理。"
-    exit 1
-  fi
-
-  # 最终确认端口已释放
-  if ! wait_for_port_free; then
-    echo "ERROR: 端口 $PORT 仍未释放，请手动处理。"
     exit 1
   fi
 }
@@ -141,17 +147,7 @@ start_service() {
   if [ -n "$pid" ]; then
     if is_crm_process "$pid"; then
       echo "==> 端口 $PORT 已被 CRM 后端占用 (PID: $pid)，正在停止旧进程 ..."
-      kill -15 "$pid"
-      if ! wait_for_exit "$pid"; then
-        echo "==> 旧进程未在 10 秒内退出，强制终止 ..."
-        kill -9 "$pid" 2>/dev/null || true
-        sleep 1
-      fi
-      if ! wait_for_port_free; then
-        echo "ERROR: 端口 $PORT 仍未释放，请手动处理。"
-        exit 1
-      fi
-      echo "==> 旧进程已停止"
+      stop_crm_by_pid "$pid" && echo "==> 旧进程已停止"
     else
       echo "ERROR: 端口 $PORT 被其他进程占用 (PID: $pid)，请手动处理。"
       exit 1
