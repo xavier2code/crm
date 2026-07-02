@@ -8,6 +8,9 @@ import { useAuthStore } from '@/stores/auth'
 
 const LoginPage = lazy(() => import('@/pages/login'))
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
+const ChannelDashboardPage = lazy(() => import('@/pages/channel-dashboard'))
+const RebatePage = lazy(() => import('@/pages/rebate'))
+const RebateRatesPage = lazy(() => import('@/pages/rebate-rates'))
 const CustomerPage = lazy(() => import('@/pages/customer'))
 const CustomerCreatePage = lazy(() => import('@/pages/customer/create'))
 const CustomerDetailPage = lazy(() => import('@/pages/customer/detail'))
@@ -66,6 +69,30 @@ export function Router() {
             element={
               <LazyWrapper>
                 <DashboardPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="dashboard/channel/:channelId"
+            element={
+              <LazyWrapper>
+                <ChannelDashboardPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="business/rebate"
+            element={
+              <LazyWrapper>
+                <RebatePage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="business/rebate/rates"
+            element={
+              <LazyWrapper>
+                <RebateRatesPage />
               </LazyWrapper>
             }
           />
