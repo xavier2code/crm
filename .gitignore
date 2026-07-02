@@ -80,3 +80,6 @@ test-output/
 
 # Accidental npm artifacts
 backend/package-lock.json
+
+# Claude Code agent prompt (local-only, see AGENTS.md for the tracked rules)
+CLAUDE.md
