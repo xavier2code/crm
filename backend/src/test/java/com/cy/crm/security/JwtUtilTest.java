@@ -1,5 +1,6 @@
 package com.cy.crm.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +24,7 @@ class JwtUtilTest {
     @BeforeEach
     void setUp() {
         String secret = "this-is-a-test-secret-key-that-is-at-least-32-bytes-long-for-testing";
-        jwtUtil = new JwtUtil(secret, 3600, 86400, "test-issuer");
+        jwtUtil = new JwtUtil(secret, 3600, 86400, "test-issuer", new ObjectMapper());
 
         // 手动创建一个没有 type claim 的访问令牌
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
