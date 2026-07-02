@@ -81,7 +81,7 @@ export default function LoginPage() {
             name="captcha"
             rules={[{ required: true, message: '请输入验证码' }]}
           >
-            <CaptchaInput ref={captchaRef} />
+            <CaptchaInput ref={captchaRef} disabled={loading} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading} block>

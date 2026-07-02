@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Input, Spin } from 'antd'
 
 import { fetchCaptcha } from '@/api/auth'
@@ -11,6 +11,7 @@ export interface CaptchaInputValue {
 interface CaptchaInputProps {
   value?: CaptchaInputValue
   onChange?: (value: CaptchaInputValue) => void
+  disabled?: boolean
 }
 
 export interface CaptchaInputRef {
@@ -18,26 +19,40 @@ export interface CaptchaInputRef {
 }
 
 const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
-  ({ value, onChange }, ref) => {
+  ({ value, onChange, disabled }, ref) => {
     const [uuid, setUuid] = useState('')
     const [image, setImage] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(false)
+    const mountedRef = useRef(true)
+    const loadingRef = useRef(false)
+
+    useEffect(() => {
+      return () => {
+        mountedRef.current = false
+      }
+    }, [])
 
     const refresh = async () => {
+      if (loadingRef.current) return
+      loadingRef.current = true
       setLoading(true)
       setError(false)
       try {
         const res = await fetchCaptcha()
+        if (!mountedRef.current) return
         setUuid(res.uuid)
         setImage(res.image)
         onChange?.({ captchaUuid: res.uuid, captchaCode: '' })
       } catch {
-        setError(true)
-        setImage('')
-        setUuid('')
+        if (mountedRef.current) {
+          setError(true)
+          setImage('')
+          setUuid('')
+        }
       } finally {
-        setLoading(false)
+        if (mountedRef.current) setLoading(false)
+        loadingRef.current = false
       }
     }
 
@@ -58,7 +73,7 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
           value={value?.captchaCode || ''}
           onChange={handleCodeChange}
           placeholder="验证码"
-          maxLength={6}
+          disabled={disabled}
         />
         <div
           onClick={refresh}
@@ -79,7 +94,7 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
           {loading ? (
             <Spin size="small" />
           ) : error ? (
-            <span style={{ fontSize: 12, color: '#999' }}>点击刷新</span>
+            <span style={{ fontSize: 12, color: '#999' }}>加载失败，点击刷新</span>
           ) : (
             image && (
               <img
