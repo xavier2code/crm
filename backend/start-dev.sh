@@ -4,21 +4,54 @@ set -e
 cd "$(dirname "$0")"
 
 PORT=8080
+# NOTE: PORT must match server.port in application-dev-local.yml
 APP_CLASS="com.cy.crm.CrmApplication"
 
-# 获取占用端口的 PID
+# 获取占用端口的 PID（仅返回第一个，避免多行导致 kill 失败）
 find_pid_on_port() {
   local pid
-  pid=$(lsof -ti :"$PORT" 2>/dev/null || true)
+  pid=$(lsof -ti :"$PORT" 2>/dev/null | head -1 || true)
   echo "$pid"
 }
 
 # 判断指定 PID 是否为 CRM 后端进程
 is_crm_process() {
   local pid=$1
+  if [ -z "$pid" ]; then
+    return 1
+  fi
   local cmd
   cmd=$(ps -p "$pid" -o command= 2>/dev/null || true)
   [[ "$cmd" == *"$APP_CLASS"* ]]
+}
+
+# 等待进程完全退出（最多 10 秒）
+wait_for_exit() {
+  local pid=$1
+  local max_wait=10
+  local waited=0
+  while [ "$waited" -lt "$max_wait" ]; do
+    if ! ps -p "$pid" > /dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  return 1
+}
+
+# 等待端口释放（最多 10 秒）
+wait_for_port_free() {
+  local max_wait=10
+  local waited=0
+  while [ "$waited" -lt "$max_wait" ]; do
+    if [ -z "$(find_pid_on_port)" ]; then
+      return 0
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  return 1
 }
 
 # 停止 CRM 后端服务
@@ -32,11 +65,28 @@ stop_service() {
 
   if is_crm_process "$pid"; then
     echo "==> 正在停止 CRM 后端服务 (PID: $pid) ..."
-    kill -9 "$pid"
-    sleep 1
-    echo "==> 服务已停止"
+    kill -15 "$pid"
+    if wait_for_exit "$pid"; then
+      echo "==> 服务已停止"
+    else
+      echo "==> 服务未在 10 秒内退出，强制终止 ..."
+      kill -9 "$pid" 2>/dev/null || true
+      sleep 1
+      if [ -z "$(find_pid_on_port)" ]; then
+        echo "==> 服务已停止"
+      else
+        echo "ERROR: 无法停止服务 (PID: $pid)"
+        exit 1
+      fi
+    fi
   else
     echo "ERROR: 端口 $PORT 被其他进程占用 (PID: $pid)，请手动处理。"
+    exit 1
+  fi
+
+  # 最终确认端口已释放
+  if ! wait_for_port_free; then
+    echo "ERROR: 端口 $PORT 仍未释放，请手动处理。"
     exit 1
   fi
 }
@@ -46,23 +96,23 @@ show_status() {
   local pid
   pid=$(find_pid_on_port)
   if [ -z "$pid" ]; then
-    echo "服务未运行"
+    echo "==> 服务未运行"
   elif is_crm_process "$pid"; then
-    echo "服务运行中 (PID: $pid)"
+    echo "==> 服务运行中 (PID: $pid)"
   else
-    echo "端口 $PORT 被其他进程占用 (PID: $pid)"
+    echo "==> 端口 $PORT 被其他进程占用 (PID: $pid)"
   fi
 }
 
 # 显示帮助
 show_help() {
   cat <<EOF
-用法: ./start-dev.sh [command]
+用法: ./start-dev.sh [command] [gradlew-args...]
 
 命令:
   start     启动后端服务（默认）
   stop      停止后端服务
-  restart   重启后端服务
+  restart   重启后端服务（额外参数将传递给 gradlew bootRun）
   status    查看服务状态
   help      显示此帮助
 EOF
@@ -91,8 +141,17 @@ start_service() {
   if [ -n "$pid" ]; then
     if is_crm_process "$pid"; then
       echo "==> 端口 $PORT 已被 CRM 后端占用 (PID: $pid)，正在停止旧进程 ..."
-      kill -9 "$pid"
-      sleep 1
+      kill -15 "$pid"
+      if ! wait_for_exit "$pid"; then
+        echo "==> 旧进程未在 10 秒内退出，强制终止 ..."
+        kill -9 "$pid" 2>/dev/null || true
+        sleep 1
+      fi
+      if ! wait_for_port_free; then
+        echo "ERROR: 端口 $PORT 仍未释放，请手动处理。"
+        exit 1
+      fi
+      echo "==> 旧进程已停止"
     else
       echo "ERROR: 端口 $PORT 被其他进程占用 (PID: $pid)，请手动处理。"
       exit 1
