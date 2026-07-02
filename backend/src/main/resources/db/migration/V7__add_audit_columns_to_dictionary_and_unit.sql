@@ -1,0 +1,12 @@
+-- 为继承 BaseEntity 但缺少审计字段的表补充列
+-- V6 已添加 version，本迁移只补充 created_at/updated_at/is_deleted
+
+-- t_dictionary
+ALTER TABLE t_dictionary ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE t_dictionary ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE t_dictionary ADD COLUMN is_deleted SMALLINT NOT NULL DEFAULT 0;
+
+-- t_unit
+ALTER TABLE t_unit ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE t_unit ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE t_unit ADD COLUMN is_deleted SMALLINT NOT NULL DEFAULT 0;
