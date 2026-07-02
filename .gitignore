@@ -74,3 +74,9 @@ ssl/
 
 # Test outputs
 test-output/
+
+# Claude / Superpowers work directories
+.superpowers/
+
+# Accidental npm artifacts
+backend/package-lock.json
