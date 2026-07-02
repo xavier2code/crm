@@ -600,6 +600,26 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
         return roleIds != null && roleIds.size() == 1 && roleIds.contains(4L);
     }
 
+    /**
+     * 校验当前用户是否有权访问该项目（防止 IDOR）
+     */
+    private void validateProjectAccess(Project project) {
+        if (project == null) {
+            return;
+        }
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity == null) {
+            return;
+        }
+        Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+        if (customer == null) {
+            return;
+        }
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
+    }
+
     private void saveOrUpdate(BiddingNode node, BiddingNodeMapper mapper) {
         if (node.getId() == null) {
             mapper.insert(node);
@@ -709,7 +729,7 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
     }
 
     /**
-     * 计算10项里程碑完成度
+     * 计算9项里程碑完成度
      */
     private Integer calculateCompletionRate(ProjectMilestone milestone) {
         int count = 0;
@@ -722,8 +742,7 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
         if (milestone.getAcceptanceDone() != null && milestone.getAcceptanceDone() == 1) count++;
         if (milestone.getInvoiceIssued() != null && milestone.getInvoiceIssued() == 1) count++;
         if (milestone.getPaymentDone() != null && milestone.getPaymentDone() == 1) count++;
-        if (milestone.getServiceFeeReceived() != null && milestone.getServiceFeeReceived() == 1) count++;
-        return count * 100 / 10;
+        return count * 100 / 9;
     }
 
     private BigDecimal getCurrentScore(Long projectId) {
