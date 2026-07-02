@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Input, Spin } from 'antd'
 
 import { fetchCaptcha } from '@/api/auth'
@@ -27,13 +27,7 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
     const mountedRef = useRef(true)
     const loadingRef = useRef(false)
 
-    useEffect(() => {
-      return () => {
-        mountedRef.current = false
-      }
-    }, [])
-
-    const refresh = async () => {
+    const refresh = useCallback(async () => {
       if (loadingRef.current) return
       loadingRef.current = true
       setLoading(true)
@@ -54,14 +48,16 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
         if (mountedRef.current) setLoading(false)
         loadingRef.current = false
       }
-    }
+    }, [onChange])
 
     useImperativeHandle(ref, () => ({ refresh }))
 
     useEffect(() => {
       refresh()
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+      return () => {
+        mountedRef.current = false
+      }
+    }, [refresh])
 
     const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       onChange?.({ captchaUuid: uuid, captchaCode: e.target.value })
@@ -73,6 +69,7 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
           value={value?.captchaCode || ''}
           onChange={handleCodeChange}
           placeholder="验证码"
+          maxLength={6}
           disabled={disabled}
         />
         <div
