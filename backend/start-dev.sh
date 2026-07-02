@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eu
 
 cd "$(dirname "$0")"
 
@@ -7,7 +7,8 @@ PORT=8080
 # NOTE: PORT must match server.port in application-dev-local.yml
 APP_CLASS="com.cy.crm.CrmApplication"
 
-# 获取占用端口的 PID（仅返回第一个，避免多行导致 kill 失败）
+# 获取占用端口的 PID
+# 当多个进程占用同一端口时，仅返回第一个；kill 会释放该端口及其关联连接
 find_pid_on_port() {
   local pid
   pid=$(lsof -ti :"$PORT" 2>/dev/null | head -1 || true)
@@ -15,13 +16,14 @@ find_pid_on_port() {
 }
 
 # 判断指定 PID 是否为 CRM 后端进程
+# 使用 args= 而非 command=，避免长命令行被截断导致匹配失败
 is_crm_process() {
   local pid=$1
   if [ -z "$pid" ]; then
     return 1
   fi
   local cmd
-  cmd=$(ps -p "$pid" -o command= 2>/dev/null || true)
+  cmd=$(ps -p "$pid" -o args= 2>/dev/null || true)
   [[ "$cmd" == *"$APP_CLASS"* ]]
 }
 
@@ -116,7 +118,7 @@ show_help() {
 用法: ./start-dev.sh [command] [gradlew-args...]
 
 命令:
-  start     启动后端服务（默认）
+  start     启动后端服务（默认，额外参数将传递给 gradlew bootRun）
   stop      停止后端服务
   restart   重启后端服务（额外参数将传递给 gradlew bootRun）
   status    查看服务状态
@@ -187,7 +189,7 @@ case "$COMMAND" in
     stop_service
     ;;
   restart)
-    stop_service
+    stop_service || exit 1
     start_service "$@"
     ;;
   status)
