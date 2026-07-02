@@ -18,12 +18,14 @@ public interface DictionaryConverter {
     /**
      * 请求 DTO -> 实体
      */
+    @Mapping(target = "isBuiltin", ignore = true)
     Dictionary requestToEntity(DictionaryRequest request);
 
     /**
      * 更新实体
      */
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "isBuiltin", ignore = true)
     void updateEntityFromRequest(DictionaryRequest request, @MappingTarget Dictionary dictionary);
 
     /**

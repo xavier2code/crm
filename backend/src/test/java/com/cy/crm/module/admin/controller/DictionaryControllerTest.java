@@ -1,5 +1,6 @@
 package com.cy.crm.module.admin.controller;
 
+import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.module.admin.dto.DictionaryRequest;
 import com.cy.crm.module.admin.service.DictionaryService;
 import com.cy.crm.module.admin.vo.DictionaryVO;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -92,11 +94,13 @@ class DictionaryControllerTest {
 
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
-    void delete_shouldReturnSuccess() throws Exception {
-        doNothing().when(dictionaryService).delete(1L);
+    void delete_shouldReturnErrorWhenBuiltin() throws Exception {
+        doThrow(BusinessException.dictionaryBuiltinNotDeletable())
+                .when(dictionaryService).delete(1L);
 
         mockMvc.perform(delete("/api/admin/dictionaries/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(0));
+                .andExpect(jsonPath("$.code").value(3009))
+                .andExpect(jsonPath("$.message").value("预置字典项不可删除"));
     }
 }

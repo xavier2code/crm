@@ -42,8 +42,8 @@ export default function DictionaryPage() {
       .then((data) => {
         const typeList = Object.keys(data)
         setTypes(typeList)
-        if (typeList.length > 0 && !selectedType) {
-          setSelectedType(typeList[0])
+        if (typeList.length > 0) {
+          setSelectedType((prev) => prev || typeList[0])
         }
       })
       .catch(() => {

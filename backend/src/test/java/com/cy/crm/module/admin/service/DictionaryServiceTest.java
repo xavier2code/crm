@@ -142,6 +142,19 @@ class DictionaryServiceTest {
     }
 
     @Test
+    void delete_shouldSucceedWhenIsBuiltinNull() {
+        Dictionary dict = new Dictionary();
+        dict.setId(3L);
+        dict.setIsBuiltin(null);
+
+        when(dictionaryMapper.selectById(3L)).thenReturn(dict);
+        when(dictionaryMapper.deleteById(3L)).thenReturn(1);
+
+        assertDoesNotThrow(() -> dictionaryService.delete(3L));
+        verify(dictionaryMapper).deleteById(3L);
+    }
+
+    @Test
     void allByTypes_shouldReturnGroupedMap() {
         Dictionary dict = new Dictionary();
         dict.setType("test_type");
