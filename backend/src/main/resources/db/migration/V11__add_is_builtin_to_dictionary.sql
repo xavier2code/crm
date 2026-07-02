@@ -7,5 +7,5 @@ UPDATE t_dictionary SET is_builtin = 1 WHERE type IN (
     'opportunity_status', 'project_status', 'stage_6'
 );
 
--- V5 中写入的 stage / opportunity_stage 也标记为预置
+-- 将历史迁移（V1、V5）中写入的字典项统一标记为预置
 UPDATE t_dictionary SET is_builtin = 1 WHERE type IN ('stage', 'opportunity_stage');

@@ -94,6 +94,16 @@ class DictionaryControllerTest {
 
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void delete_shouldReturnSuccess() throws Exception {
+        doNothing().when(dictionaryService).delete(1L);
+
+        mockMvc.perform(delete("/api/admin/dictionaries/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
     void delete_shouldReturnErrorWhenBuiltin() throws Exception {
         doThrow(BusinessException.dictionaryBuiltinNotDeletable())
                 .when(dictionaryService).delete(1L);
@@ -102,5 +112,17 @@ class DictionaryControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(3009))
                 .andExpect(jsonPath("$.message").value("预置字典项不可删除"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void delete_shouldReturnErrorWhenNotFound() throws Exception {
+        doThrow(BusinessException.resourceNotFound("字典"))
+                .when(dictionaryService).delete(999L);
+
+        mockMvc.perform(delete("/api/admin/dictionaries/999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1002))
+                .andExpect(jsonPath("$.message").value("字典不存在"));
     }
 }

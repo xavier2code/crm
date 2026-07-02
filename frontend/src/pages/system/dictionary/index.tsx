@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Button,
   Card,
@@ -51,10 +51,21 @@ export default function DictionaryPage() {
       })
   }, [])
 
+  const refreshItems = useCallback(() => {
+    if (!selectedType) return
+    setLoading(true)
+    getDictionariesByType(selectedType)
+      .then((data) => setItems(data))
+      .catch(() => {
+        message.error('加载字典项失败')
+      })
+      .finally(() => setLoading(false))
+  }, [selectedType])
+
   useEffect(() => {
     if (!selectedType) return
     refreshItems()
-  }, [selectedType])
+  }, [selectedType, refreshItems])
 
   const menuItems: MenuProps['items'] = useMemo(
     () =>
@@ -64,17 +75,6 @@ export default function DictionaryPage() {
       })),
     [types]
   )
-
-  const refreshItems = () => {
-    if (!selectedType) return
-    setLoading(true)
-    getDictionariesByType(selectedType)
-      .then((data) => setItems(data))
-      .catch(() => {
-        message.error('加载字典项失败')
-      })
-      .finally(() => setLoading(false))
-  }
 
   const handleAdd = () => {
     setEditingItem(null)
