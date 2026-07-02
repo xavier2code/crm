@@ -24,13 +24,13 @@
 - [ ] 当前 `ProjectController` 已有 P 节点/招投标/合同/回款/双精评分等分散端点，缺少统一聚合
 
 ### 4. 客户管理前端
-- [ ] 客户列表页 `frontend/src/pages/customer/index.tsx`（当前 9 行占位）
-- [ ] 新增客户页 `frontend/src/pages/customer/create/index.tsx`（3 行占位）
-- [ ] 客户详情页 `frontend/src/pages/customer/detail/index.tsx`（3 行占位）
-- [ ] 编辑客户页 `frontend/src/pages/customer/edit/index.tsx`（3 行占位）
-- [ ] 联系人维护弹窗/页面（决策人/对接人/操作员）
-- [ ] 单位选择、警种下拉、手机号脱敏展示
-- [ ] 后端 `CustomerController` 10 个端点已完整（`/api/customers`）
+- [x] ✅ 客户列表页 `frontend/src/pages/customer/index.tsx`（搜索、分页、分配）
+- [x] ✅ 新增客户页 `frontend/src/pages/customer/create/index.tsx`
+- [x] ✅ 客户详情页 `frontend/src/pages/customer/detail/index.tsx`
+- [x] ✅ 编辑客户页 `frontend/src/pages/customer/edit/index.tsx`
+- [x] ✅ 联系人维护弹窗/页面（决策人/对接人/操作员）
+- [x] ✅ 单位选择、警种下拉、手机号脱敏展示
+- [x] ✅ 后端 `CustomerController` 10 个端点已完整（`/api/customers`）
 
 ### 5. 商机报备前端
 - [ ] 我的报备/全部商机列表页 `frontend/src/pages/opportunity/index.tsx`（9 行占位）
