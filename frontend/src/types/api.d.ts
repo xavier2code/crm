@@ -4294,6 +4294,11 @@ export interface components {
             sort?: number;
             /** @description 备注 */
             remark?: string;
+            /**
+             * Format: int32
+             * @description 是否预置
+             */
+            isBuiltin?: number;
         };
         /** @description 统一响应结构 */
         ApiResultListDictionaryVO: {
