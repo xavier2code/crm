@@ -74,6 +74,14 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
         />
         <div
           onClick={refresh}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              refresh()
+            }
+          }}
+          role="button"
+          tabIndex={0}
           style={{
             width: 100,
             height: 32,
@@ -95,6 +103,7 @@ const CaptchaInput = forwardRef<CaptchaInputRef, CaptchaInputProps>(
           ) : (
             image && (
               <img
+                key={uuid}
                 src={image}
                 alt="验证码"
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
