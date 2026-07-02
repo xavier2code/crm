@@ -146,6 +146,10 @@ public class BusinessException extends RuntimeException {
         return new BusinessException(3008, "联系人不存在");
     }
 
+    public static BusinessException dictionaryBuiltinNotDeletable() {
+        return new BusinessException(3009, "预置字典项不可删除");
+    }
+
     // ========== 商机/报备错误（4xxx）便捷方法 ==========
 
     public static BusinessException opportunityExists() {

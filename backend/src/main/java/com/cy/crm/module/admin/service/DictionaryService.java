@@ -64,6 +64,13 @@ public class DictionaryService extends ServiceImpl<DictionaryMapper, Dictionary>
     }
 
     public void delete(Long id) {
+        Dictionary dict = dictionaryMapper.selectById(id);
+        if (dict == null) {
+            throw BusinessException.resourceNotFound("字典");
+        }
+        if (dict.getIsBuiltin() != null && dict.getIsBuiltin() == 1) {
+            throw BusinessException.dictionaryBuiltinNotDeletable();
+        }
         dictionaryMapper.deleteById(id);
     }
 
