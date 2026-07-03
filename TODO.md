@@ -42,19 +42,26 @@
 - [x] 后端 `OpportunityController` 7 个端点已完整（含 `submit`/`approve`）
 
 ### 6. 合同管理
-- [ ] 前端合同列表页 `frontend/src/pages/contract/index.tsx`（3 行占位）
+- [x] ✅ 后端 `ContractController`（5 端点：分页/详情/创建/更新/状态变更）已完整
+- [x] ✅ 前端 `api/contract.ts` API 客户端已就位（28 行）
+- [ ] 前端合同列表页 `frontend/src/pages/contract/index.tsx`（4 行占位）
 - [ ] 合同详情/状态变更页
 - [ ] 后端修复 `ContractNodeService.getChannelIdFromProject` 硬编码桩（`return 1L`）— 文件位于 `backend/src/main/java/com/cy/crm/module/project/service/ContractNodeService.java:174-178`
 - [ ] 后端修复 `ContractNodeService.getProductCategoryFromProject` 硬编码桩（`return "DEFAULT"`）— 同文件 line 180-184
 - [ ] 合同与项目关联选择
 
 ### 7. 单位/渠道分配（业务侧 4 级链路）
-- [ ] 后端 `backend/src/main/java/com/cy/crm/module/unit/` 目录**空**，需补 4 级分配 API
-- [ ] 大区总→渠道负责人、大区总→BD、BD→渠道、渠道→BD 业务侧 UI
-- [ ] 后端 `admin/UserChannelService`（`77f0f04` 提交）已存在 channel 维度分配，可复用
-- [x] ✅ 前端渠道管理页 `pages/system/channel/index.tsx`（582 行）已实现
-- [ ] ❌ **前端渠道管理页路由 `system/channel` 未注册**（router 中缺少）
-- [ ] 前端业务侧单位列表/分配入口**未实现**
+- [x] ✅ 后端 `module/unit/` 业务侧模块：`UnitAssignmentService` + controller + mapper（`fe9237d`）
+- [x] ✅ Flyway V20：`t_unit_assignment` 表 + `UNIT_ASSIGN` 菜单 + `unit:assign` 操作码 + 5 角色授权
+- [x] ✅ 4 级分配链路：大区总→BD（BD 范围）、大区总→渠道负责人 / BD→渠道（沿用 t_user_channel 1/2）、渠道负责人→渠道 BD（CHANNEL_BD 范围，仅 head 可操作）
+- [x] ✅ 渠道 BD 角色：自动按 userId=self 过滤；CHANNEL_BD 范围操作用户必须为 head（强制校验）
+- [x] ✅ 12 个单测覆盖：范围校验、渠道权限、去重、撤销、CHANNEL_BD 必传 channelId、BD 范围拒绝传 channelId、Self-only 过滤
+- [x] ✅ `ChannelController` 补齐：`GET/POST/PUT/DELETE /api/admin/channels` + assignments 6 端点（前端 system/channel 此前因缺 controller 全部 404）
+- [x] ✅ `UserChannelService.countByChannel` 新增（删除渠道时校验）
+- [x] ✅ 前端业务侧入口 `pages/business/units/index.tsx`（400+ 行）：分配总览 + 新建分配（按范围/渠道动态字段）+ 撤销
+- [x] ✅ 前端路由 `/business/units` 已注册；菜单由后端 seed 提供
+- 提交：`ae1fd33`（merge `4336a7e` 已 push origin/main）
+- 后续：业务域 / 警种维度二级过滤继续沿用 DataScope 内存字段（SQL 拦截器未动）
 
 ### 8. 系统管理 - 用户/角色
 - [x] ✅ 用户列表页 `frontend/src/pages/system/users/index.tsx`（搜索/分页/启停用/重置密码/数据权限）
@@ -161,16 +168,18 @@
 
 ---
 
-## 当前进度概览（2026-07-03 `c61cc59` 盘点）
+## 当前进度概览（2026-07-03 `4336a7e` 盘点）
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
-| 🔴 高优先级 10 项 | 4 | 1 | 5 |
+| 🔴 高优先级 10 项 | 5 | 0 | 5 |
 | 🟡 中优先级 4 项 | 4 | 0 | 0 |
 | 🟢 低优先级 6 项 | 3 | 2 | 1 |
-| **合计 20 项** | **11** | **3** | **6** |
+| **合计 20 项** | **12** | **2** | **6** |
 
 **最近合并的相关 commit**：
+- `4336a7e` Merge branch 'feat/unit-channel-assignment'
+- `ae1fd33` feat(unit): add business-side unit assignment 4-level chain
 - `c61cc59` Merge branch 'feat/initial-password-rotation'
 - `bd8962a` feat(auth): force password change on first login and 90-day expiry
 - `75c32a6` Merge branch 'feat/notification-center-frontend'
@@ -199,4 +208,4 @@
 3. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
 4. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
 
-> ✅ 已完成：#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI、#17 首次登录强制改密 + 90 天过期
+> ✅ 已完成：#7 单位/渠道分配 4 级链路（业务侧 UI + ChannelController + module/unit）、#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI、#17 首次登录强制改密 + 90 天过期
