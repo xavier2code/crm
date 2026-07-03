@@ -12,7 +12,7 @@ import lombok.Getter;
  * - 3xxx：客户/单位/字典
  * - 4xxx：商机/报备
  * - 5xxx：项目/过程/跟进
- * - 6xxx：返利/合同
+ * - 6xxx：返利/合同/报销（6010-6019）
  * - 7xxx：文件/导入导出
  * - 8xxx：通知
  * - 9xxx：定时任务/系统
@@ -223,4 +223,43 @@ public class BusinessException extends RuntimeException {
     public static BusinessException contractSigned() {
         return new BusinessException(6004, "合同已签订");
     }
+
+    // ========== 报销错误（6xxx / 6010-6019）便捷方法 ==========
+
+    public static BusinessException reimbursementNotFound() {
+        return new BusinessException(6010, "报销记录不存在");
+    }
+
+    public static BusinessException reimbursementStatusInvalid() {
+        return new BusinessException(6011, "报销状态不允许此操作");
+    }
+
+    public static BusinessException reimbursementAlreadyApproved() {
+        return new BusinessException(6012, "报销已审批，无法再次审批");
+    }
+
+    public static BusinessException reimbursementRejected() {
+        return new BusinessException(6013, "报销已驳回");
+    }
+
+    public static BusinessException reimbursementAlreadyPaid() {
+        return new BusinessException(6014, "报销已付款");
+    }
+
+    public static BusinessException reimbursementNotApplicant() {
+        return new BusinessException(6015, "仅申请人本人可操作");
+    }
+
+    public static BusinessException reimbursementNotApprover() {
+        return new BusinessException(6016, "仅审批人可执行此操作");
+    }
+
+    public static BusinessException reimbursementAttachmentNotFound() {
+        return BusinessException.resourceNotFound("附件");
+    }
+
+    public static BusinessException reimbursementAttachmentUploadFailed(String msg) {
+        return new BusinessException(6018, "附件上传失败：" + msg);
+    }
+
 }

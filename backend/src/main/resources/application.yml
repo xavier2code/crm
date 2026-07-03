@@ -3,6 +3,10 @@ spring:
     name: crm-backend
   profiles:
     active: dev
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 100MB
   datasource:
     url: jdbc:h2:mem:crm;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
@@ -77,3 +81,15 @@ spring:
     username: ${DB_USERNAME:crm}
     password: ${DB_PASSWORD:crm}
     driver-class-name: org.postgresql.Driver
+
+# 文件存储（报销附件等）
+file:
+  storage:
+    # 本地存储根目录（生产建议挂载到对象存储或 NAS）
+    base-path: ${FILE_STORAGE_PATH:./data/uploads}
+    # 单文件大小上限（字节），默认 20MB
+    max-file-size: 20971520
+    # 单次上传文件数上限
+    max-files-per-request: 10
+    # 允许的 MIME 类型（白名单）
+    allowed-types: application/pdf,image/jpeg,image/png,image/gif,image/webp,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip
