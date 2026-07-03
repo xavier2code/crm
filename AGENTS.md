@@ -1,11 +1,8 @@
-# Repository Guidelines
+# Development Guide
 
-A Chinese-language CRM for the "CY 渠道" sales channel. Monorepo: Spring
-Boot backend + Vite/React frontend, sharing PostgreSQL or H2 via Flyway.
-Business rules live in `CRM-渠道版-开发文档.md` — read it before touching
-business code.
+A Chinese-language CRM for the "CY 渠道" sales channel. Monorepo: Spring Boot 3.2 backend + Vite/React 19 frontend, sharing PostgreSQL or H2 via Flyway. Business rules live in `CRM-渠道版-开发文档.md` — read it before touching business code.
 
-## Project Structure & Module Organization
+## 1. Project Structure
 
 ```
 crm/
@@ -21,131 +18,120 @@ crm/
 │   └── src/{api,components,hooks,pages,
 │            router,stores,utils,types}/
 ├── docker-compose.yml
-└── CRM-渠道版-开发文档.md                      # 业务规则权威来源
+└── CRM-渠道版-开发文档.md                      # business rules (authoritative)
 ```
 
-## Build, Test, and Development Commands
+## 2. Quick Commands
 
-**Backend** (`backend/`): `./start-dev.sh` for the `dev-local` profile
-(external PG/Redis); `./gradlew bootRun` for H2 (needs `JWT_SECRET` env,
-≥32 bytes); `./gradlew test` for all tests; `./gradlew test --tests
-<FQN>` for one class; `./gradlew bootJar -x test` to build a jar.
+| Task | Command |
+|---|---|
+| Frontend dev server | `cd frontend && npm run dev` (http://localhost:8000, proxies /api → :8080) |
+| Frontend build | `cd frontend && npm run build` (type-check + production build) |
+| Frontend lint | `cd frontend && npm run lint` (fails on warnings) |
+| Frontend format | `cd frontend && npm run format` |
+| Regenerate API types | `cd frontend && npm run gen:api` (requires backend on :8080) |
+| Backend dev (H2) | `cd backend && JWT_SECRET=<32+chars> ./gradlew bootRun` |
+| Backend dev (PG/Redis) | `cd backend && ./start-dev.sh` (also supports `stop`, `restart`, `status`) |
+| Backend test all | `cd backend && ./gradlew test` |
+| Backend test one class | `cd backend && ./gradlew test --tests <FQN>` |
+| Backend build jar | `cd backend && ./gradlew bootJar -x test` |
+| Full-stack Docker | `cp .env.example .env && SPRING_PROFILES_ACTIVE=prod docker-compose up --build` |
 
-**Frontend** (`frontend/`): `npm run dev` for the Vite dev server
-(`http://localhost:8000`, proxies `/api` → `:8080`); `npm run build` for
-type-check + production build; `npm run lint` (fails on warnings,
-`--max-warnings 0`); `npm run format` for Prettier; `npm run gen:api` to
-regenerate `src/types/api.d.ts` from backend OpenAPI.
+## 3. Architecture
 
-## Coding Style & Naming Conventions
+### Backend Layer Conventions
 
-- **Java**: 4-space indent, Lombok (`@Data`, `@RequiredArgsConstructor`),
-  MapStruct for DTO ↔ entity ↔ VO. Package layout
-  `com.cy.crm.module.<feature>.{controller,service,…}`. Use the
-  `BusinessException` helpers (`.resourceNotFound()`, `.forbidden()`,
-  `.paramError()`) and segment-scoped error codes (1xxx generic, 2xxx
-  auth, 3xxx admin/customer, 4xxx opportunity, 5xxx project, 6xxx
-  rebate/contract).
-- **TypeScript/React**: 2-space indent, no semicolons, single quotes,
-  trailing comma `es5`, 100-char lines (Prettier). Function components
-  only. Pages live in `src/pages/<route>/index.tsx` and lazy-load via
-  `src/router/index.tsx`. API files export typed wrappers around
-  `@/api/client.request`. Linting must pass with zero warnings.
+- **Controllers**: `@RestController` + `@Validated`, return `ApiResult<T>`. Authorization via `@PreAuthorize` with role constants from `RoleConstants`.
+- **Services**: extend `ServiceImpl<Mapper, Entity>`. Business exceptions use `BusinessException.*` helpers (`.resourceNotFound()`, `.forbidden()`, `.paramError()`).
+- **DTOs/VOs**: mapped with MapStruct converters (`*Converter`). Lombok `@Data` is standard.
+- **Entities**: extend `BaseEntity` (id, createdAt, updatedAt, isDeleted, version) or `AuditableEntity` (adds createdBy). MyBatis-Plus handles soft deletes (`is_deleted`), optimistic locking (`version`), and auto-fill fields.
 
-## Testing Guidelines
+### Key Runtime Behaviors
 
-- **Backend**: JUnit 5 + Mockito, TDD-style names (`shouldXxxWhenYyy`).
-  One test class per service. Always cover permission checks — the
-  codebase relies on `DataScopeValidator` and `DataScopeInterceptor` for
-  IDOR protection.
-- **Frontend**: no automated tests configured. Verify with `npm run
-  build` and manual smoke testing.
+- `DataScopeInterceptor` intercepts SELECT statements for configured tables (`t_customer`, `t_opportunity`, `t_project`, `t_rebate`) and injects row-level filters based on the current user's `DataScope`. Complex queries (UNION, CTE) are rejected.
+- Services also call `DataScopeValidator.validateAccess(...)` for IDOR protection on single-resource endpoints.
+- Default profile is H2 with `/h2-console` enabled. Redis is optional — when disabled, login captcha is bypassed.
+- Flyway migrations: add new numbered scripts in `db/migration/`; never edit already-shipped scripts.
+- API docs available at `http://localhost:8080/doc.html` when backend is running.
 
-## Git Worktree Workflow (Parallel Development)
+### Frontend Structure
 
-Multiple agents/developers work on the repo concurrently. To avoid
-conflicts at `main`, every multi-file change **must** be done inside a
-dedicated git worktree on its own branch. Do **not** create commits on
-`main` directly.
+- `api/` — Axios wrappers. `api/client.ts` exports `request<T>()`, attaches JWT from `localStorage` (`crm-token`), maps business codes to UI behavior (401/2001/2003 → logout, 2007 → change-password).
+- `hooks/` — TanStack Query wrappers (`useQuery`/`useMutation`) per feature.
+- `pages/` — page components, one route per `pages/<route>/index.tsx`, lazy-loaded via `router/index.tsx`.
+- `stores/` — Zustand stores: `auth` (token/user/roles/permissions), `menu`, `dict`.
+- `types/api.d.ts` — generated from backend OpenAPI; regenerate with `npm run gen:api`.
 
-Use the placeholder `<repo-root>` for the path to the repository root on
-your machine.
+## 4. Coding Conventions
 
-### Lifecycle
+### Java
 
-1. **Create** a worktree for your task from `main`:
+- 4-space indent. Lombok (`@Data`, `@RequiredArgsConstructor`).
+- Package layout: `com.cy.crm.module.<feature>.{controller,service,mapper,entity,dto,vo,converter}`.
+- Error code segments: 1xxx generic, 2xxx auth, 3xxx admin/customer, 4xxx opportunity, 5xxx project, 6xxx rebate/contract.
+
+### TypeScript / React
+
+- 2-space indent, no semicolons, single quotes, trailing comma `es5`, 100-char lines (Prettier).
+- Function components only. Routes lazy-load via `React.lazy`.
+- API types from `components['schemas']['...']` in `src/types/api.d.ts`.
+- API files export typed wrappers around `@/api/client.request`.
+- ESLint fails on warnings; run `npm run lint && npm run build` before considering frontend work complete.
+
+## 5. Testing
+
+- **Backend**: JUnit 5 + Mockito. TDD-style names (`shouldXxxWhenYyy`). One test class per service. Always cover permission/data-scope behavior when modifying protected resources.
+- **Frontend**: no automated tests. Verify with `npm run build` and manual smoke testing.
+
+## 6. Git Worktree Workflow
+
+Every multi-file change **must** be developed in a dedicated git worktree on its own branch. Do **not** commit to `main` directly.
+
+Use `<repo-root>` as placeholder for the path to the repository root.
+
+1. **Create** from `main`:
    ```bash
-   cd <repo-root>
-   git fetch origin
-   git worktree add \
-     <repo-root>/.worktree/<branch-name> \
-     -b <branch-name> origin/main
+   cd <repo-root> && git fetch origin
+   git worktree add <repo-root>/.worktree/<branch-name> -b <branch-name> origin/main
    ```
-   Use a descriptive branch name, e.g.
-   `feat/project-list`, `fix/contract-node-stubs`, `chore/seed-v16`.
-
-2. **Work** entirely inside that worktree directory
-   (`<repo-root>/.worktree/<branch-name>`). Run
-   the backend/frontend commands from there. Never edit files in
-   `<repo-root>` while the worktree is open —
-   that is `main`.
-
-3. **Commit** on the branch using Conventional Commits. Run validation
-   inside the worktree before committing:
+2. **Develop** entirely inside the worktree. Do not edit files in `<repo-root>` while the worktree is open.
+3. **Commit** using Conventional Commits. Validate before committing:
    - Backend: `cd backend && ./gradlew test`
    - Frontend: `cd frontend && npm run lint && npm run build`
-
-4. **Merge** back to `main` from the repo root (not the worktree):
+4. **Merge** back to `main` from the repo root:
    ```bash
-   cd <repo-root>
-   git checkout main
+   cd <repo-root> && git checkout main
    git pull --ff-only origin main
    git merge --no-ff <branch-name>
    git push origin main
    ```
-   Use `--no-ff` so the merge commit preserves the feature branch in
-   history. If `main` moved while you worked, rebase or merge `main`
-   into your branch first, re-run validation, then merge.
-
-5. **Clean up** the worktree and branch:
+   If `main` moved, rebase first, re-run validation, then merge.
+5. **Clean up**:
    ```bash
    cd <repo-root>
-   git worktree remove \
-     <repo-root>/.worktree/<branch-name>
+   git worktree remove <repo-root>/.worktree/<branch-name>
    git branch -d <branch-name>
    ```
-   Never leave a worktree in place after its branch is merged — it
-   will block future `git worktree add` calls and leak disk space.
 
-### Rules
+**Rules**: One worktree per task. Never commit to `main` directly. If two agents touch the same file, coordinate via PR description or serialize through branches.
 
-- One worktree per task/branch. Do not stack unrelated changes in the
-  same branch.
-- Do not commit to `main` directly, even for one-line fixes — open a
-  `fix/...` branch via worktree first.
-- If two agents must touch the same file, coordinate by claiming the
-  file path in the PR description; otherwise serialize via worktree
-  branches and let `main` resolve the order through merge commits.
-- For large features split across multiple commits, keep all commits on
-  the same feature branch and squash-merge at the end if history
-  cleanliness matters.
+## 7. Commit & PR Guidelines
 
-## Commit & Pull Request Guidelines
+- **Conventional Commits**: `<type>(<scope>): <subject>` — English, imperative mood, ≤72 chars.
+- Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `style`, `test`.
+- Before PR: `npm run lint && npm run build` (frontend) and `./gradlew test` (backend).
+- PRs describe the change, link issues, attach screenshots for UI work, and cite relevant sections of `CRM-渠道版-开发文档.md`.
 
-- **Conventional Commits**: `<type>(<scope>): <subject>` — types in
-  history: `fix`, `feat`, `chore`, `docs`, `refactor`, `style`, `test`.
-  English, imperative mood, ≤72-char subject.
-- Before opening a PR: `npm run lint && npm run build` (frontend) and
-  `./gradlew test` (backend). PRs describe the change, link any issue,
-  attach screenshots for UI work, and cite the relevant section of
-  `CRM-渠道版-开发文档.md` when adding features.
+## 8. Security & Configuration
 
-## Security & Configuration Tips
+- Never commit secrets. Copy `.env.example` → `.env`. `JWT_SECRET` must be ≥32 bytes.
+- Default Spring profile is `dev` (H2). Switch to PostgreSQL/Redis via `SPRING_PROFILES_ACTIVE=dev-local` or `./start-dev.sh`.
+- Redis is optional — when disabled, captcha on `/api/auth/login` is bypassed.
+- New DB changes need a numbered Flyway script. Never edit a script that has shipped to a shared environment.
 
-- Never commit secrets; copy `.env.example` → `.env`. `JWT_SECRET` must
-  be ≥32 bytes. Default profile is H2; switch to PostgreSQL via
-  `SPRING_PROFILES_ACTIVE=dev-local`. Redis is optional — when disabled,
-  the captcha on `/api/auth/login` is bypassed.
-- New DB changes need a numbered Flyway script in
-  `backend/src/main/resources/db/migration/`. Never edit a script that
-  has already shipped to a shared environment.
+### Default Local Credentials (H2 profile)
+
+- `admin` / `123456`
+- `sales` / `123456`
+- `business` / `123456`
+- `finance` / `123456`
