@@ -68,22 +68,26 @@ conflicts at `main`, every multi-file change **must** be done inside a
 dedicated git worktree on its own branch. Do **not** create commits on
 `main` directly.
 
+Use the placeholder `<repo-root>` for the path to the repository root on
+your machine.
+
 ### Lifecycle
 
 1. **Create** a worktree for your task from `main`:
    ```bash
-   git -C /Users/xavier/Projects/Github/crm fetch origin
-   git -C /Users/xavier/Projects/Github/crm worktree add \
-     /Users/xavier/Projects/Github/crm/.worktree/<branch-name> \
+   cd <repo-root>
+   git fetch origin
+   git worktree add \
+     <repo-root>/.worktree/<branch-name> \
      -b <branch-name> origin/main
    ```
    Use a descriptive branch name, e.g.
    `feat/project-list`, `fix/contract-node-stubs`, `chore/seed-v16`.
 
 2. **Work** entirely inside that worktree directory
-   (`/Users/xavier/Projects/Github/crm/.worktree/<branch-name>`). Run
+   (`<repo-root>/.worktree/<branch-name>`). Run
    the backend/frontend commands from there. Never edit files in
-   `/Users/xavier/Projects/Github/crm` while the worktree is open —
+   `<repo-root>` while the worktree is open —
    that is `main`.
 
 3. **Commit** on the branch using Conventional Commits. Run validation
@@ -93,10 +97,11 @@ dedicated git worktree on its own branch. Do **not** create commits on
 
 4. **Merge** back to `main` from the repo root (not the worktree):
    ```bash
-   git -C /Users/xavier/Projects/Github/crm checkout main
-   git -C /Users/xavier/Projects/Github/crm pull --ff-only origin main
-   git -C /Users/xavier/Projects/Github/crm merge --no-ff <branch-name>
-   git -C /Users/xavier/Projects/Github/crm push origin main
+   cd <repo-root>
+   git checkout main
+   git pull --ff-only origin main
+   git merge --no-ff <branch-name>
+   git push origin main
    ```
    Use `--no-ff` so the merge commit preserves the feature branch in
    history. If `main` moved while you worked, rebase or merge `main`
@@ -104,9 +109,10 @@ dedicated git worktree on its own branch. Do **not** create commits on
 
 5. **Clean up** the worktree and branch:
    ```bash
-   git -C /Users/xavier/Projects/Github/crm worktree remove \
-     /Users/xavier/Projects/Github/crm/.worktree/<branch-name>
-   git -C /Users/xavier/Projects/Github/crm branch -d <branch-name>
+   cd <repo-root>
+   git worktree remove \
+     <repo-root>/.worktree/<branch-name>
+   git branch -d <branch-name>
    ```
    Never leave a worktree in place after its branch is merged — it
    will block future `git worktree add` calls and leak disk space.
