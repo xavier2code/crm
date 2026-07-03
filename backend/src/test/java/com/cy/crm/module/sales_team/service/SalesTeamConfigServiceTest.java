@@ -10,13 +10,12 @@ import com.cy.crm.module.sales_team.vo.SalesTeamConfigVO;
 import com.cy.crm.security.DataScope;
 import com.cy.crm.security.JwtAuthenticationToken;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cy.crm.config.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -35,10 +34,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *  - 重复 (team_code, region_code, effective_from) 拦截
  *  - 删除/更新不存在记录抛 1002
  */
-@SpringBootTest
-@ActiveProfiles("test")
 @Transactional
-public class SalesTeamConfigServiceTest {
+public class SalesTeamConfigServiceTest extends AbstractPostgresIntegrationTest {
 
     @Autowired private SalesTeamConfigService salesTeamConfigService;
     @Autowired private SalesTeamConfigMapper salesTeamConfigMapper;
