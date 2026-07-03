@@ -48,6 +48,28 @@ const ICON_NAME_MAP: Record<string, string> = {
   Bell: 'BellOutlined',
 }
 
+function findMenuById(items: MenuItem[], id: number): MenuItem | null {
+  for (const item of items) {
+    if (item.id === id) return item
+    if (item.children) {
+      const found = findMenuById(item.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+function findMenuByPath(items: MenuItem[], path: string): MenuItem | null {
+  for (const item of items) {
+    if (item.path === path) return item
+    if (item.children) {
+      const found = findMenuByPath(item.children, path)
+      if (found) return found
+    }
+  }
+  return null
+}
+
 function renderMenuItems(items: MenuItem[]): NonNullable<MenuProps['items']> {
   return items.map((item) => {
     const mappedIconName = item.icon ? ICON_NAME_MAP[item.icon] || item.icon : null
@@ -58,14 +80,14 @@ function renderMenuItems(items: MenuItem[]): NonNullable<MenuProps['items']> {
 
     if (item.children && item.children.length > 0) {
       return {
-        key: item.path || String(item.id),
+        key: String(item.id),
         icon,
         label: item.name,
         children: renderMenuItems(item.children),
       }
     }
     return {
-      key: item.path || String(item.id),
+      key: String(item.id),
       icon,
       label: item.name,
     }
@@ -191,11 +213,15 @@ export default function BasicLayout() {
   const menuItems = useMemo(() => renderMenuItems(menus), [menus])
 
   const selectedKeys = useMemo(() => {
-    return [location.pathname]
-  }, [location.pathname])
+    const menu = findMenuByPath(menus, location.pathname)
+    return menu ? [String(menu.id)] : []
+  }, [location.pathname, menus])
 
   const handleMenuClick = ({ key }: { key: string }) => {
-    navigate(key)
+    const menu = findMenuById(menus, Number(key))
+    if (menu?.path) {
+      navigate(menu.path)
+    }
   }
 
   const handleLogout = () => {
