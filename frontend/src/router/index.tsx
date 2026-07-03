@@ -7,6 +7,7 @@ import BlankLayout from '@/layouts/BlankLayout'
 import { useAuthStore } from '@/stores/auth'
 
 const LoginPage = lazy(() => import('@/pages/login'))
+const ChangePasswordPage = lazy(() => import('@/pages/change-password'))
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ChannelDashboardPage = lazy(() => import('@/pages/channel-dashboard'))
 const RebatePage = lazy(() => import('@/pages/rebate'))
@@ -60,6 +61,16 @@ export function Router() {
             <BlankLayout>
               <LazyWrapper>
                 <LoginPage />
+              </LazyWrapper>
+            </BlankLayout>
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            <BlankLayout>
+              <LazyWrapper>
+                <ChangePasswordPage />
               </LazyWrapper>
             </BlankLayout>
           }

@@ -72,6 +72,13 @@ public class AuthService {
             User user = userMapper.selectOne(new QueryWrapper<User>().eq("username", request.getUsername()));
             user.setRoles(userMapper.selectRolesByUserId(user.getId()));
 
+            // 4.1 强制改密检查：首次登录（is_initial_password=1）或密码超过 expireDays 天
+            if (mustChangePassword(user)) {
+                // 清空 SecurityContext 与失败计数，避免半登录状态
+                SecurityContextHolder.clearContext();
+                throw BusinessException.forceChangePassword();
+            }
+
             // 获取角色编码
             List<String> roles = getRoleCodes(user);
 
@@ -265,6 +272,26 @@ public class AuthService {
     /**
      * 构建结构化数据权限范围
      */
+
+    /**
+     * 判定用户是否需要强制改密。
+     * - isInitialPassword=1：首次登录（新建 / 管理员重置）
+     * - passwordChangedAt 距今 > password.expireDays（默认 90）天：密码过期
+     * - passwordChangedAt 为 null：兼容 V19 之前的旧用户，按过期处理（保守）
+     */
+    private boolean mustChangePassword(User user) {
+        if (user.getIsInitialPassword() != null && user.getIsInitialPassword() == 1) {
+            return true;
+        }
+        if (user.getPasswordChangedAt() == null) {
+            return true;
+        }
+        long days = java.time.Duration.between(
+                user.getPasswordChangedAt(),
+                java.time.LocalDateTime.now()).toDays();
+        return days >= passwordPolicyService.getExpireDays();
+    }
+
     private DataScope buildDataScope(User user) {
         List<com.cy.crm.module.admin.entity.DataPermission> permissions = dataPermissionMapper.selectList(
                 new QueryWrapper<com.cy.crm.module.admin.entity.DataPermission>()
@@ -337,6 +364,8 @@ public class AuthService {
 
         // 更新密码
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setIsInitialPassword(0);
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
         userMapper.updateById(user);
 
         // 记录密码历史

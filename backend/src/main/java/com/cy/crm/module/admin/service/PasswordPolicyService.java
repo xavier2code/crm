@@ -247,4 +247,12 @@ public class PasswordPolicyService {
         );
         return failure != null ? failure.getFailCount() : 0;
     }
+
+    /**
+     * 密码过期天数（从 application.yml 的 password.expire-days 读取，默认 90）。
+     * 暴露 getter 给 AuthService.login 判定强制改密。
+     */
+    public int getExpireDays() {
+        return expireDays;
+    }
 }
