@@ -16,6 +16,9 @@ const CustomerCreatePage = lazy(() => import('@/pages/customer/create'))
 const CustomerDetailPage = lazy(() => import('@/pages/customer/detail'))
 const CustomerEditPage = lazy(() => import('@/pages/customer/edit'))
 const OpportunityPage = lazy(() => import('@/pages/opportunity'))
+const OpportunityCreatePage = lazy(() => import('@/pages/opportunity/create'))
+const OpportunityDetailPage = lazy(() => import('@/pages/opportunity/detail'))
+const OpportunityEditPage = lazy(() => import('@/pages/opportunity/edit'))
 const ProjectPage = lazy(() => import('@/pages/project'))
 const ProjectDetailPage = lazy(() => import('@/pages/project/detail'))
 const ContractPage = lazy(() => import('@/pages/contract'))
@@ -134,6 +137,30 @@ export function Router() {
             element={
               <LazyWrapper>
                 <OpportunityPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="opportunity/create"
+            element={
+              <LazyWrapper>
+                <OpportunityCreatePage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="opportunity/:id"
+            element={
+              <LazyWrapper>
+                <OpportunityDetailPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="opportunity/:id/edit"
+            element={
+              <LazyWrapper>
+                <OpportunityEditPage />
               </LazyWrapper>
             }
           />

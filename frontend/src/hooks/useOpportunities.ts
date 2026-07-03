@@ -8,7 +8,6 @@ import {
   deleteOpportunity,
   submitOpportunity,
   approveOpportunity,
-  rejectOpportunity,
 } from '@/api/opportunity'
 
 export function useOpportunities(params: Parameters<typeof getOpportunities>[0]) {
@@ -55,7 +54,10 @@ export function useSubmitOpportunity() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: submitOpportunity,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['opportunities'] }),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] })
+      queryClient.invalidateQueries({ queryKey: ['opportunity', id] })
+    },
   })
 }
 
@@ -64,15 +66,9 @@ export function useApproveOpportunity() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Parameters<typeof approveOpportunity>[1] }) =>
       approveOpportunity(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['opportunities'] }),
-  })
-}
-
-export function useRejectOpportunity() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof rejectOpportunity>[1] }) =>
-      rejectOpportunity(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['opportunities'] }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] })
+      queryClient.invalidateQueries({ queryKey: ['opportunity', variables.id] })
+    },
   })
 }
