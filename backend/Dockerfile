@@ -17,8 +17,8 @@ COPY gradle/ gradle/
 COPY gradlew .
 COPY settings.gradle build.gradle ./
 
-# 下载依赖
-RUN ./gradlew dependencies --no-daemon || true
+# 下载依赖（失败时构建终止，避免后续错误难以定位）
+RUN ./gradlew dependencies --no-daemon
 
 # 复制源码并构建
 COPY src/ src/

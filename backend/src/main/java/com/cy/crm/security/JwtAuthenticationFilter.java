@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,6 +56,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 角色需要以 ROLE_ 前缀加入 authorities，才能被 hasRole/hasAnyRole 识别
                 List<String> roles = jwtUtil.extractRoles(token);
                 List<String> ops = jwtUtil.extractOps(token);
+
+                // 强制改密临时 token：没有角色/操作权限，但允许访问改密接口
+                boolean changePasswordOnly = Boolean.TRUE.equals(jwtUtil.extractChangePasswordFlag(token));
+                if (changePasswordOnly) {
+                    if (!isChangePasswordRequest(request)) {
+                        log.warn("Change-password-only token used for non-change-password request: {}", request.getRequestURI());
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    roles = Collections.emptyList();
+                    ops = Collections.emptyList();
+                }
+
                 List<SimpleGrantedAuthority> authorities = Stream.concat(
                         roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role)),
                         ops.stream().map(SimpleGrantedAuthority::new)
@@ -85,5 +99,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isChangePasswordRequest(HttpServletRequest request) {
+        return "POST".equalsIgnoreCase(request.getMethod())
+                && request.getRequestURI() != null
+                && request.getRequestURI().endsWith("/api/auth/change-password");
     }
 }

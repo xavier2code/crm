@@ -160,6 +160,13 @@ public class JwtUtil {
     }
 
     /**
+     * 提取强制改密标记
+     */
+    public Boolean extractChangePasswordFlag(String token) {
+        return parseClaims(token).get("changePassword", Boolean.class);
+    }
+
+    /**
      * 验证令牌
      */
     public boolean validateToken(String token) {

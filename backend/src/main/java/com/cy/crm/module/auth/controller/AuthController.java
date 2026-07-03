@@ -56,9 +56,15 @@ public class AuthController {
 
     @Operation(summary = "修改密码")
     @PostMapping("/change-password")
-    public ApiResult<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+    public ApiResult<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request,
+                                          HttpServletRequest httpRequest) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         authService.changePassword(username, request.getOldPassword(), request.getNewPassword());
+        // 改密成功后把当前临时/旧 token 加入黑名单，强制重新登录
+        String token = extractToken(httpRequest);
+        if (token != null) {
+            authService.logout(token);
+        }
         return ApiResult.ok();
     }
 

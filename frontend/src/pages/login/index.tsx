@@ -29,6 +29,16 @@ export default function LoginPage() {
         captchaUuid: captcha.captchaUuid,
         captchaCode: captcha.captchaCode,
       })
+
+      // 强制改密：保存临时 token 并跳转改密页
+      if (result.mustChangePassword) {
+        localStorage.setItem('crm-token', result.accessToken)
+        setUser(result.userInfo)
+        message.info('首次登录或密码已过期，请先修改密码')
+        navigate('/change-password', { replace: true })
+        return
+      }
+
       setAuth(result)
       useMenuStore.getState().setMenus(result.menuTree || [])
 

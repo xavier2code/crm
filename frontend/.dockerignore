@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Dependencies (reinstalled via npm ci)
+node_modules/
+
+# Build output (rebuilt in container)
+dist/
+.vite/
+.cache/
+
+# Logs
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Worktrees
+.worktree/

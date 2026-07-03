@@ -18,6 +18,7 @@ export interface LoginResult {
   roles: string[]
   menuTree?: MenuItem[]
   permissionCodes: string[]
+  mustChangePassword?: boolean
 }
 
 export interface CaptchaResult {

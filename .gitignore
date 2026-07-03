@@ -78,6 +78,9 @@ test-output/
 # Claude / Superpowers work directories
 .superpowers/
 
+# Git worktrees (parallel development)
+.worktree/
+
 # Accidental npm artifacts
 backend/package-lock.json
 

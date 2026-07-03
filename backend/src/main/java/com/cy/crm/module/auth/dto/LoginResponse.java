@@ -33,6 +33,9 @@ public class LoginResponse {
     @Schema(description = "数据权限范围")
     private DataScope dataScope;
 
+    @Schema(description = "是否需要强制修改密码（true 时表示只返回了临时 token，仅可用于改密）")
+    private Boolean mustChangePassword;
+
     @Data
     @Schema(description = "用户信息")
     public static class UserInfo {

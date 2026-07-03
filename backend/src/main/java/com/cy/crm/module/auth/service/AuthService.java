@@ -22,6 +22,8 @@ import com.cy.crm.security.DataScope;
 import com.cy.crm.security.JwtUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
+import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +31,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,6 +53,9 @@ public class AuthService {
     private final CaptchaService captchaService;
     private final PasswordPolicyService passwordPolicyService;
     private final TokenBlacklistService tokenBlacklistService;
+
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
     public LoginResponse login(LoginRequest request) {
         // 1. 验证验证码
@@ -76,10 +83,15 @@ public class AuthService {
             user.setRoles(userMapper.selectRolesByUserId(user.getId()));
 
             // 4.1 强制改密检查：首次登录（is_initial_password=1）或密码超过 expireDays 天
-            if (mustChangePassword(user)) {
-                // 清空 SecurityContext 与失败计数，避免半登录状态
+            boolean needChangePassword = mustChangePassword(user);
+            if (needChangePassword) {
+                // 生成临时 token（仅用于改密），避免无 token 导致改密接口 401
+                String tempAccessToken = generateChangePasswordToken(user);
+                LoginResponse response = buildMinimalLoginResponse(user, tempAccessToken);
+                response.setMustChangePassword(true);
+                // 清空 SecurityContext，避免半登录状态
                 SecurityContextHolder.clearContext();
-                throw BusinessException.forceChangePassword();
+                return response;
             }
 
             // 获取角色编码
@@ -142,6 +154,62 @@ public class AuthService {
             passwordPolicyService.recordLoginFailure(request.getUsername(), getClientIp());
             throw BusinessException.badCredentials();
         }
+    }
+
+    /**
+     * 生成仅用于强制改密的临时访问令牌。
+     * 有效期 5 分钟，不包含任何角色/菜单/操作权限，仅携带 userId 与 username。
+     */
+    private String generateChangePasswordToken(User user) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + 5 * 60 * 1000L);
+        String jti = UUID.randomUUID().toString();
+        return Jwts.builder()
+                .id(jti)
+                .issuer(jwtIssuer())
+                .subject(user.getUsername())
+                .claim("userId", user.getId())
+                .claim("changePassword", true)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(accessKey())
+                .compact();
+    }
+
+    private String jwtIssuer() {
+        try {
+            return jwtUtil.extractIssuer("dummy");
+        } catch (Exception e) {
+            return "crm-system";
+        }
+    }
+
+    private javax.crypto.SecretKey accessKey() {
+        return io.jsonwebtoken.security.Keys.hmacShaKeyFor(jwtSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 构建仅包含用户基础信息与临时 token 的登录响应。
+     */
+    private LoginResponse buildMinimalLoginResponse(User user, String tempAccessToken) {
+        LoginResponse response = new LoginResponse();
+        response.setAccessToken(tempAccessToken);
+        response.setTokenType("Bearer");
+
+        LoginResponse.UserInfo userInfo = new LoginResponse.UserInfo();
+        userInfo.setId(user.getId());
+        userInfo.setUsername(user.getUsername());
+        userInfo.setRealName(user.getRealName());
+        userInfo.setPhone(user.getPhone());
+        userInfo.setEmail(user.getEmail());
+        fillDepartmentInfo(userInfo, user.getDepartmentId());
+        response.setUserInfo(userInfo);
+
+        response.setRoles(Collections.emptyList());
+        response.setMenuTree(Collections.emptyList());
+        response.setPermissionCodes(Collections.emptyList());
+        response.setDataScope(DataScope.empty());
+        return response;
     }
 
     private void fillDepartmentInfo(LoginResponse.UserInfo userInfo, Long departmentId) {

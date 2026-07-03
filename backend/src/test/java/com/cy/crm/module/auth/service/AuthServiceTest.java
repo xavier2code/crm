@@ -438,11 +438,13 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(userMapper.selectOne(any())).thenReturn(user);
         when(userMapper.selectRolesByUserId(2L)).thenReturn(java.util.Collections.emptyList());
+        setField(authService, "jwtSecret", "test-secret-key-must-be-at-least-32-bytes-long");
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> authService.login(request));
-        assertEquals(2007, ex.getCode());
-        assertTrue(ex.getMessage().contains("修改密码"));
+        LoginResponse response = authService.login(request);
+        assertNotNull(response);
+        assertTrue(response.getMustChangePassword());
+        assertNotNull(response.getAccessToken());
+        assertTrue(response.getAccessToken().length() > 10);
     }
 
     @Test
@@ -469,10 +471,13 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(userMapper.selectOne(any())).thenReturn(user);
         when(userMapper.selectRolesByUserId(3L)).thenReturn(java.util.Collections.emptyList());
+        setField(authService, "jwtSecret", "test-secret-key-must-be-at-least-32-bytes-long");
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> authService.login(request));
-        assertEquals(2007, ex.getCode());
+        LoginResponse response = authService.login(request);
+        assertNotNull(response);
+        assertTrue(response.getMustChangePassword());
+        assertNotNull(response.getAccessToken());
+        assertTrue(response.getAccessToken().length() > 10);
     }
 
 }
