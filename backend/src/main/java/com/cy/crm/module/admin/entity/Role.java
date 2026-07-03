@@ -14,5 +14,10 @@ public class Role {
     private String code;
     private String name;
     private Integer isBuiltin;
-    private Integer dataScopeType;
+
+    /**
+     * 角色的默认数据权限维度（DataScopeDimension.code）。
+     * 用户实际生效的 DataScope 由 t_data_permission 单独控制；该字段保留作角色默认值参考。
+     */
+    private String dataScopeType;
 }

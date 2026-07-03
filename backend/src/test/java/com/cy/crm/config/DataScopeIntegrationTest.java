@@ -411,7 +411,7 @@ class DataScopeIntegrationTest {
     private void grantUnitPermission(Long userId, Long unitId) {
         DataPermission dp = new DataPermission();
         dp.setUserId(userId);
-        dp.setScopeType(4); // UNIT 类型
+        dp.setScopeType("UNIT"); // UNIT 类型
         dp.setScopeValue(String.valueOf(unitId));
         dataPermissionMapper.insert(dp);
     }

@@ -266,63 +266,11 @@ public class AuthService {
      * 构建结构化数据权限范围
      */
     private DataScope buildDataScope(User user) {
-        DataScope scope = new DataScope();
-
-        // 获取用户的数据权限配置
         List<com.cy.crm.module.admin.entity.DataPermission> permissions = dataPermissionMapper.selectList(
                 new QueryWrapper<com.cy.crm.module.admin.entity.DataPermission>()
                         .eq("user_id", user.getId())
         );
-
-        if (permissions.isEmpty()) {
-            // 默认只能看自己的数据
-            scope.setSelfOnly(true);
-            return scope;
-        }
-
-        // 按权限类型分类
-        for (com.cy.crm.module.admin.entity.DataPermission dp : permissions) {
-            Integer scopeType = dp.getScopeType();
-            String scopeValue = dp.getScopeValue();
-
-            if (scopeType == null) continue;
-
-            switch (scopeType) {
-                case 1 -> { // ALL
-                    scope.setAll(true);
-                    return scope; // 全部权限直接返回
-                }
-                case 2 -> { // CHANNEL
-                    if (scope.getChannelIds() == null) {
-                        scope.setChannelIds(new ArrayList<>());
-                    }
-                    try {
-                        scope.getChannelIds().add(Long.valueOf(scopeValue));
-                    } catch (NumberFormatException e) {
-                        // 忽略无效值
-                    }
-                }
-                case 3 -> { // REGION
-                    if (scope.getRegions() == null) {
-                        scope.setRegions(new ArrayList<>());
-                    }
-                    scope.getRegions().add(scopeValue);
-                }
-                case 4 -> { // UNIT
-                    if (scope.getUnitIds() == null) {
-                        scope.setUnitIds(new ArrayList<>());
-                    }
-                    try {
-                        scope.getUnitIds().add(Long.valueOf(scopeValue));
-                    } catch (NumberFormatException e) {
-                        // 忽略无效值
-                    }
-                }
-                case 5 -> scope.setSelfOnly(true); // SELF
-            }
-        }
-
-        return scope;
+        return DataScope.fromPermissions(permissions);
     }
 
     public CurrentUserResponse getCurrentUser(String username) {
