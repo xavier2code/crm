@@ -12,6 +12,12 @@ public class DataPermission {
     private Long id;
 
     private Long userId;
-    private Integer scopeType;
+
+    /**
+     * 权限维度 code，与 DataScopeDimension 枚举一一对应：
+     * ALL / CHANNEL / REGION / UNIT / BUSINESS_DOMAIN / POLICE_TYPE / SELF
+     */
+    private String scopeType;
+
     private String scopeValue;
 }

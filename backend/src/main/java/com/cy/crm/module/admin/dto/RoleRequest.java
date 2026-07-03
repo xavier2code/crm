@@ -17,6 +17,12 @@ public class RoleRequest {
     @Schema(description = "角色名称")
     private String name;
 
-    @Schema(description = "数据范围类型：1全部 2本渠道 3本区域 4本部门 5本人")
-    private Integer dataScopeType = 1;
+    @Schema(description = "数据范围维度 code：ALL / CHANNEL / REGION / UNIT / BUSINESS_DOMAIN / POLICE_TYPE / SELF")
+    private String dataScopeType = "SELF";
+
+    @Schema(description = "角色关联的菜单 ID 列表")
+    private java.util.List<Long> menuIds;
+
+    @Schema(description = "角色关联的操作编码列表")
+    private java.util.List<String> operationCodes;
 }

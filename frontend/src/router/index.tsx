@@ -7,6 +7,7 @@ import BlankLayout from '@/layouts/BlankLayout'
 import { useAuthStore } from '@/stores/auth'
 
 const LoginPage = lazy(() => import('@/pages/login'))
+const ChangePasswordPage = lazy(() => import('@/pages/change-password'))
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ChannelDashboardPage = lazy(() => import('@/pages/channel-dashboard'))
 const RebatePage = lazy(() => import('@/pages/rebate'))
@@ -29,7 +30,13 @@ const UsersPage = lazy(() => import('@/pages/system/users'))
 const RolesPage = lazy(() => import('@/pages/system/roles'))
 const DictionaryPage = lazy(() => import('@/pages/system/dictionary'))
 const UnitsPage = lazy(() => import('@/pages/system/units'))
+const AuditLogPage = lazy(() => import('@/pages/system/audit-log'))
+const ChannelPage = lazy(() => import('@/pages/system/channel'))
+const FollowUpPage = lazy(() => import('@/pages/followup'))
+const TaskPage = lazy(() => import('@/pages/task'))
+const NotificationsPage = lazy(() => import('@/pages/notifications'))
 const BusinessPage = lazy(() => import('@/pages/business'))
+const BusinessUnitsPage = lazy(() => import('@/pages/business/units'))
 const ReimbursementPage = lazy(() => import('@/pages/reimbursement'))
 const ForbiddenPage = lazy(() => import('@/pages/error/403'))
 
@@ -58,6 +65,16 @@ export function Router() {
             <BlankLayout>
               <LazyWrapper>
                 <LoginPage />
+              </LazyWrapper>
+            </BlankLayout>
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            <BlankLayout>
+              <LazyWrapper>
+                <ChangePasswordPage />
               </LazyWrapper>
             </BlankLayout>
           }
@@ -100,6 +117,14 @@ export function Router() {
             element={
               <LazyWrapper>
                 <RebateRatesPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="business/units"
+            element={
+              <LazyWrapper>
+                <BusinessUnitsPage />
               </LazyWrapper>
             }
           />
@@ -260,6 +285,46 @@ export function Router() {
             element={
               <LazyWrapper>
                 <UnitsPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="system/audit"
+            element={
+              <LazyWrapper>
+                <AuditLogPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="system/channel"
+            element={
+              <LazyWrapper>
+                <ChannelPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="followup"
+            element={
+              <LazyWrapper>
+                <FollowUpPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="task"
+            element={
+              <LazyWrapper>
+                <TaskPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="notifications"
+            element={
+              <LazyWrapper>
+                <NotificationsPage />
               </LazyWrapper>
             }
           />

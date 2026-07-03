@@ -42,52 +42,68 @@
 - [x] 后端 `OpportunityController` 7 个端点已完整（含 `submit`/`approve`）
 
 ### 6. 合同管理
-- [ ] 前端合同列表页 `frontend/src/pages/contract/index.tsx`（3 行占位）
+- [x] ✅ 后端 `ContractController`（5 端点：分页/详情/创建/更新/状态变更）已完整
+- [x] ✅ 前端 `api/contract.ts` API 客户端已就位（28 行）
+- [ ] 前端合同列表页 `frontend/src/pages/contract/index.tsx`（4 行占位）
 - [ ] 合同详情/状态变更页
 - [ ] 后端修复 `ContractNodeService.getChannelIdFromProject` 硬编码桩（`return 1L`）— 文件位于 `backend/src/main/java/com/cy/crm/module/project/service/ContractNodeService.java:174-178`
 - [ ] 后端修复 `ContractNodeService.getProductCategoryFromProject` 硬编码桩（`return "DEFAULT"`）— 同文件 line 180-184
 - [ ] 合同与项目关联选择
 
 ### 7. 单位/渠道分配（业务侧 4 级链路）
-- [ ] 后端 `backend/src/main/java/com/cy/crm/module/unit/` 目录**空**，需补 4 级分配 API
-- [ ] 大区总→渠道负责人、大区总→BD、BD→渠道、渠道→BD 业务侧 UI
-- [ ] 后端 `admin/UserChannelService`（`77f0f04` 提交）已存在 channel 维度分配，可复用
-- [x] ✅ 前端渠道管理页 `pages/system/channel/index.tsx`（582 行）已实现
-- [ ] ❌ **前端渠道管理页路由 `system/channel` 未注册**（router 中缺少）
-- [ ] 前端业务侧单位列表/分配入口**未实现**
+- [x] ✅ 后端 `module/unit/` 业务侧模块：`UnitAssignmentService` + controller + mapper（`fe9237d`）
+- [x] ✅ Flyway V20：`t_unit_assignment` 表 + `UNIT_ASSIGN` 菜单 + `unit:assign` 操作码 + 5 角色授权
+- [x] ✅ 4 级分配链路：大区总→BD（BD 范围）、大区总→渠道负责人 / BD→渠道（沿用 t_user_channel 1/2）、渠道负责人→渠道 BD（CHANNEL_BD 范围，仅 head 可操作）
+- [x] ✅ 渠道 BD 角色：自动按 userId=self 过滤；CHANNEL_BD 范围操作用户必须为 head（强制校验）
+- [x] ✅ 12 个单测覆盖：范围校验、渠道权限、去重、撤销、CHANNEL_BD 必传 channelId、BD 范围拒绝传 channelId、Self-only 过滤
+- [x] ✅ `ChannelController` 补齐：`GET/POST/PUT/DELETE /api/admin/channels` + assignments 6 端点（前端 system/channel 此前因缺 controller 全部 404）
+- [x] ✅ `UserChannelService.countByChannel` 新增（删除渠道时校验）
+- [x] ✅ 前端业务侧入口 `pages/business/units/index.tsx`（400+ 行）：分配总览 + 新建分配（按范围/渠道动态字段）+ 撤销
+- [x] ✅ 前端路由 `/business/units` 已注册；菜单由后端 seed 提供
+- 提交：`ae1fd33`（merge `4336a7e` 已 push origin/main）
+- 后续：业务域 / 警种维度二级过滤继续沿用 DataScope 内存字段（SQL 拦截器未动）
 
 ### 8. 系统管理 - 用户/角色
-- [ ] 用户列表页 `frontend/src/pages/system/users/index.tsx`（当前 9 行占位）
-- [ ] 新增/编辑用户、重置密码、启停用
-- [ ] 角色列表页 `frontend/src/pages/system/roles/index.tsx`（9 行占位）
-- [ ] 角色权限配置：菜单树 + 操作编码勾选
-- [ ] 修复用户创建时 `operatorId` 硬编码为 `1L` 的兜底逻辑
-- [ ] **后端 `UserController` 缺 `/reset-password` 与 `/status` 端点**（只有 5 个基础端点）
+- [x] ✅ 用户列表页 `frontend/src/pages/system/users/index.tsx`（搜索/分页/启停用/重置密码/数据权限）
+- [x] ✅ 角色列表页 `frontend/src/pages/system/roles/index.tsx`（内置角色保护 + 操作编码勾选）
+- [x] ✅ 角色权限配置：操作编码勾选（菜单树待后端补 `MenuController`，见 #9 续）
+- [x] ✅ 修复 `UserController.create` 中 `operatorId=1L` 硬编码，改读 `SecurityContext.getCurrentUserId()`
+- [x] ✅ `UserController` 补齐 `POST /{id}/reset-password` 与 `PUT /{id}/status` 端点
+- 提交：`498b750` 数据权限维度对齐 + `ea6ea8b` 系统管理前端（merge `ce50e9e` 已 push origin/main）
 
 ### 9. 数据权限配置
-- [x] ✅ 后端 `DataPermissionService`、`DataPermissionUpdateRequest`、`DataPermissionVO`（`50166df` 提交）
-- [x] ✅ 前端 `api/admin/dataPermission.ts`、`hooks/useAdminDataPermissions.ts`（`50166df` 提交）
-- [ ] ❌ **后端 `DataPermissionController` 缺失**（`/api/admin/users/{id}/data-permissions` 未实现）
-- [ ] ❌ 用户管理页面中"数据权限"配置 UI 缺失
-- [ ] ❌ 后台管理菜单中"数据权限"独立入口未加
-- [ ] ⚠️ **风险**：前端 `SCOPE_TYPE`（1=业务域 2=区域 3=渠道 4=警种）与 `AuthService.buildDataScope` / `DataScopeInterceptor` 的语义（1=ALL 2=CHANNEL 3=REGION 4=UNIT 5=SELF）不一致，且拦截器未配置 `business_domain`、`police_type` 字段映射。补 Controller/UI 前需先统一维度定义，否则权限过滤无法按预期工作
+- [x] ✅ 新增 `DataScopeDimension` 枚举作为 SSOT：`ALL / CHANNEL / REGION / UNIT / BUSINESS_DOMAIN / POLICE_TYPE / SELF`
+- [x] ✅ `V16 Flyway`：`t_data_permission.scope_type` 与 `t_role.data_scope_type` 由 SMALLINT 改 VARCHAR(32)，按 V2 字典翻译历史值
+- [x] ✅ `DataScope` 重写：`fromPermissions(List)` 静态构造；未知 scopeType 永不静默降级 ALL
+- [x] ✅ `AuthService.buildDataScope` 改用 `DataScope.fromPermissions`，根除 1=业务域/1=ALL、4=警种/4=UNIT 歧义
+- [x] ✅ 新增 `DataPermissionController`：`GET / PUT /api/admin/users/{userId}/data-permissions`
+- [x] ✅ 用户管理页"数据权限"弹窗（7 个维度逐项保存，ALL/SELF 无值，其他多值换行/逗号分隔）
+- [x] ✅ 前端 `DATA_SCOPE_DIMENSIONS` 字符串 code 替代数字 `SCOPE_TYPE`
+- [x] ✅ `RoleService` 补 `menuIds` / `operationCodes` 在 `t_role_menu` / `t_role_operation` 的整组覆盖
+- [x] ✅ 单测：`DataScopeTest`（16 用例） + `DataPermissionServiceTest`（7 用例） + `DataScopeIntegrationTest` 适配
+- 提交：`498b750` + `ea6ea8b`（merge `ce50e9e` 已 push origin/main）
+- 后续：业务域 / 警种维度已存到内存 `DataScope.businessDomainCodes / policeTypeCodes`，SQL 不直接生效；需要 service 层白名单二次过滤时复用该字段
 
 ### 10. 跟进记录 / 日程
-- [ ] 日程页（今日/未来 3 天/已完成）
-- [ ] 客户跟进历史页
-- [ ] 新增/编辑跟进记录弹窗
-- [ ] 阶段反馈必填校验（当前阶段 ≠ 下一步阶段时）
-- [ ] 任务按时填写跟进后自动消除闭环
-- [ ] 后端 `FollowUpController` 4 端点 + `TaskController` 4 端点已完整
+- [x] ✅ 跟进记录页 `/followup`（搜索/分页/新建/编辑/删除）
+- [x] ✅ 阶段反馈必填校验（`currentStage` 与 `nextStage` 不同时 `stageFeedback` 必填）
+- [x] ✅ 客户跟进历史：`pageFollowups({ customerId })` 透传给后端
+- [x] ✅ V17 菜单：`FOLLOW_UP` 授权 管理员/渠道负责人/渠道BD/CYBD
+- [x] ✅ 操作权限：followup:manage / followup:view
+- 提交：`59282ff`（merge `1dc1a2a` 已 push origin/main）
+- 后续：关键词搜索（后端 `pageFollowups` 需补 `keyword` 参数）；任务"按时填写跟进自动消除闭环"业务规则由后端 scheduler 实现（暂未做）
 
 ---
 
 ## 🟡 中优先级（重要支撑模块）
 
 ### 11. 任务管理
-- [ ] 任务列表/日历 UI
-- [ ] 今日任务、完成任务、关闭任务（必填原因）
-- [ ] 后端 `TaskController` 已完整（4 端点）
+- [x] ✅ 任务管理页 `/task`（今日待办/待完成/已完成/已关闭 4 个 Tab）
+- [x] ✅ 今日任务专门接口 `GET /api/tasks/today`，逾期高亮
+- [x] ✅ 完成任务 `POST /{id}/complete`
+- [x] ✅ 关闭任务强制要求原因（前端校验 + 弹窗）
+- [x] ✅ V17 菜单：`TASK` 授权 管理员/渠道负责人/渠道BD/CYBD/大区总（只读）
+- 提交：`59282ff`（merge `1dc1a2a` 已 push origin/main）
 
 ### 12. 返利管理
 - [x] ✅ 后端 `RebateController`（6 端点）+ `RebateRateController`（5 端点）已完整
@@ -113,21 +129,29 @@
 
 ### 15. 审计日志
 - [x] ✅ 后端 `AuditLogController` 3 端点（`/api/admin/audit-logs`）
-- [x] ✅ 前端 `pages/system/audit-log/index.tsx`（395 行）— 真实实现（`c0d0d9c` 提交）
-- [ ] ❌ **路由 `system/audit` 未注册**（当前 router 只有 system/users/roles/dictionary/units，缺少 audit）
+- [x] ✅ 前端 `pages/system/audit-log/index.tsx`（395 行）
+- [x] ✅ 路由 `system/audit` 已注册（`ea6ea8b` 提交）
+- 附加：路由 `system/channel` 也已注册（页面 582 行 + ChannelController/V15 seed 已就位，#7 中"渠道管理页"前置补齐）
 
 ### 16. 通知中心
-- [ ] 顶部导航消息角标（接 `NotificationController.count/unread`）
-- [ ] 通知列表页（`unread` + `list` 端点已就绪）
-- [ ] 全部已读功能（`/read-all` 端点已就绪）
-- [ ] 48h 报备审批超时 scheduler 已实现（`OpportunityApprovalReminderScheduler`，每整点执行）
-- [ ] 30 天报备失效 scheduler 已实现（`OpportunityExpiryScheduler`，每天 02:00 执行）
+- [x] ✅ 顶部 Bell 角标 + Popover Top 5（BasicLayout NotificationBell 子组件）
+- [x] ✅ 通知中心页 `/notifications`（全部/未读/已读 Tab + 标已读 + 查看跳转）
+- [x] ✅ 全部已读（`POST /api/notifications/read-all`）
+- [x] ✅ 30s 轮询 + window focus 刷新（hooks/useNotifications.ts useUnreadCount）
+- [x] ✅ V18 菜单：`NOTIFICATION_CENTER` 全部角色可见，`notification:view` 操作权限
+- [x] ✅ 48h 报备审批超时 scheduler（`OpportunityApprovalReminderScheduler`，每整点）
+- [x] ✅ 30 天报备失效 scheduler（`OpportunityExpiryScheduler`，每天 02:00）
+- 提交：`7358ca6`（merge `75c32a6` 已 push origin/main）
 
 ### 17. 认证登录优化
-- [ ] 登录响应 `userInfo.departmentId/departmentName` 填充（`AuthService.login` 有 `TODO`）
-- [ ] 密码强度校验（`AuthService.changePassword` 有 `TODO: 检查密码强度`）
-- [ ] 密码 90 天强制过期策略（`PasswordPolicyService.expireDays` 已支持配置，未接入强制改密流程）
-- [ ] **首次登录强制改密流程**（用户表有 `is_initial_password` 字段，登录接口未检测、change-password 后未重置）
+- [x] ✅ 首次登录强制改密：`AuthService.login` 检测 `is_initial_password=1` → 抛 2007
+- [x] ✅ 90 天强制过期策略：`t_user.password_changed_at`（V19） + `AuthService.login` 检测 `now - changed_at >= 90` → 抛 2007
+- [x] ✅ 改密清除标志：`AuthService.changePassword` 末尾设 `is_initial_password=0` + 更新 `passwordChangedAt`
+- [x] ✅ 前端 `/change-password` 路由注册（页面 100+ 行已存在但路由缺失 → 修）
+- [x] ✅ 前端 client 拦截器 2007 → `/change-password`（已存在）
+- [ ] ❌ 登录响应 `userInfo.departmentId/departmentName` 填充：阻塞于 `t_department` 表未建模，待产品确认
+- [ ] ❌ 密码强度校验（`AuthService.changePassword` 仍留 `TODO`）：等 `PasswordPolicyService` 加 `validateStrength` 后接入
+- 提交：`bd8962a`（merge `c61cc59` 已 push origin/main）
 
 ### 18. 商机报备优化
 - [x] ✅ 48h 钉钉催办 scheduler（`OpportunityApprovalReminderScheduler`）— 站内信形式实现
@@ -144,23 +168,34 @@
 
 ---
 
-## 当前进度概览（2026-07-02 `fb4a2aa` 盘点）
+## 当前进度概览（2026-07-03 `4336a7e` 盘点）
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
-| 🔴 高优先级 10 项 | 1 | 3 | 6 |
-| 🟡 中优先级 4 项 | 2 | 1 | 1 |
-| 🟢 低优先级 6 项 | 0 | 3 | 3 |
-| **合计 20 项** | **3** | **7** | **10** |
+| 🔴 高优先级 10 项 | 5 | 0 | 5 |
+| 🟡 中优先级 4 项 | 4 | 0 | 0 |
+| 🟢 低优先级 6 项 | 3 | 2 | 1 |
+| **合计 20 项** | **12** | **2** | **6** |
 
 **最近合并的相关 commit**：
+- `4336a7e` Merge branch 'feat/unit-channel-assignment'
+- `ae1fd33` feat(unit): add business-side unit assignment 4-level chain
+- `c61cc59` Merge branch 'feat/initial-password-rotation'
+- `bd8962a` feat(auth): force password change on first login and 90-day expiry
+- `75c32a6` Merge branch 'feat/notification-center-frontend'
+- `7358ca6` feat(notification): add notification center UI and header bell badge
+- `1dc1a2a` Merge branch 'feat/followup-task-frontend'
+- `59282ff` feat(followup-task): add follow-up and task management UI
+- `ce50e9e` Merge branch 'feat/data-scope-align'
+- `ea6ea8b` feat(system): users/roles management UI and audit/channel routing
+- `498b750` feat(permission): align data scope dimensions and unblock admin module
 - `7920171` feat(project): add list page, filters, /process aggregator
 - `a35f4eb` feat(dashboard): add channel dashboard and project statistics
 - `984279d` feat(project): add detail page with process management and scoring
 - `c0d0d9c` feat(audit): add audit log query page
 - `82440af` feat(auth): add change password page
 - `84cd144` feat(router): add channel dashboard, rebate, and rebate-rates routes
-- `50166df` feat(permission): add user data permission management（缺 Controller）
+- `50166df` feat(permission): add user data permission management（已被 498b750 取代为 SSOT 枚举）
 - `77f0f04` feat(channel): add channel management backend and frontend
 - `8c7705f` chore(db): add audit columns and align menu paths（V15 seed）
 
@@ -168,11 +203,9 @@
 
 ## 建议执行顺序
 
-1. **统一数据权限维度定义**（#9）— 前端 `SCOPE_TYPE` 与 `DataScopeInterceptor` 语义不一致，先对齐再补 Controller/UI，否则权限过滤会按错误维度生效
-2. **补齐系统管理前端**（#8 用户/角色 + #9 数据权限 Controller + UI）— 让 admin 模块闭环
-3. **客户/商机/合同前端**（#4 #5 #6）— 让核心业务流转可用
-4. **修硬编码桩**（#6 ContractNodeService 1L/DEFAULT）
-5. **跟进与日程**（#10 #11）— 日常操作入口
-6. **通知中心 UI**（#16）— 站内信入口
-7. **首次登录强制改密**（#17）— 安全合规
-8. **中低优先级模块**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
+1. **商机/合同前端**（#5 #6 含 ContractNodeService 硬编码桩）— 核心业务流转补齐（合同部分由 `feat-contract-management` 负责）
+2. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
+3. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
+4. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
+
+> ✅ 已完成：#7 单位/渠道分配 4 级链路（业务侧 UI + ChannelController + module/unit）、#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI、#17 首次登录强制改密 + 90 天过期

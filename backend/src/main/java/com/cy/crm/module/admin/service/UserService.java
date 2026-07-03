@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService extends ServiceImpl<UserMapper, User> {
 
+    /** 初始密码：管理员重置 / 新建用户时使用 */
+    public static final String INITIAL_PASSWORD = "123456";
+
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
     private final UserRoleMapper userRoleMapper;
@@ -53,9 +56,11 @@ public class UserService extends ServiceImpl<UserMapper, User> {
             throw new BusinessException(3001, "用户名已存在");
         }
         User user = userConverter.requestToEntity(request);
-        user.setPasswordHash(passwordEncoder.encode("123456"));
+        user.setPasswordHash(passwordEncoder.encode(INITIAL_PASSWORD));
         user.setIsInitialPassword(1);
-        user.setCreatedBy(operatorId);
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
+        user.setCreatedBy(operatorId != null ? operatorId : 0L);
         try {
             userMapper.insert(user);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
@@ -78,6 +83,38 @@ public class UserService extends ServiceImpl<UserMapper, User> {
 
     public void deleteUser(Long id) {
         userMapper.deleteById(id);
+    }
+
+    /**
+     * 重置用户密码为初始密码。标记 is_initial_password=1，强制下次登录改密。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void resetPassword(Long id) {
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw BusinessException.resourceNotFound("用户");
+        }
+        user.setPasswordHash(passwordEncoder.encode(INITIAL_PASSWORD));
+        user.setIsInitialPassword(1);
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
+        userMapper.updateById(user);
+    }
+
+    /**
+     * 启用/停用用户。停用时同时清除其会话（通过 tokenBlacklistService.removeAllSessions，
+     * 由调用方在 Controller 层显式调用；此处仅做状态切换）。
+     */
+    public void updateStatus(Long id, Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw BusinessException.paramError("status 必须为 0（停用）或 1（启用）");
+        }
+        User user = userMapper.selectById(id);
+        if (user == null) {
+            throw BusinessException.resourceNotFound("用户");
+        }
+        user.setStatus(status);
+        userMapper.updateById(user);
     }
 
     private void saveUserRoles(Long userId, List<Long> roleIds) {

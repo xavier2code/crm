@@ -101,7 +101,7 @@ public class BusinessException extends RuntimeException {
     }
 
     public static BusinessException forceChangePassword() {
-        return new BusinessException(2007, "首次登录请修改密码");
+        return new BusinessException(2007, "请修改密码后再使用系统");
     }
 
     public static BusinessException accountDisabled() {

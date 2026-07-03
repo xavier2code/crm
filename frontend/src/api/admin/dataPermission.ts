@@ -1,29 +1,40 @@
 import { request } from '../client'
 
-/** 权限维度（与后端 DataPermissionService 常量一一对应） */
-export const SCOPE_TYPE = {
-  BUSINESS_DOMAIN: 1,
-  REGION: 2,
-  CHANNEL: 3,
-  POLICE_TYPE: 4,
+/**
+ * 数据权限维度（与后端 DataScopeDimension 枚举一一对应）。
+ * 使用 code 字符串而非数字，避免与历史 scope_type 数字歧义。
+ */
+export const DATA_SCOPE_DIMENSIONS = {
+  ALL: 'ALL',
+  CHANNEL: 'CHANNEL',
+  REGION: 'REGION',
+  UNIT: 'UNIT',
+  BUSINESS_DOMAIN: 'BUSINESS_DOMAIN',
+  POLICE_TYPE: 'POLICE_TYPE',
+  SELF: 'SELF',
 } as const
 
-export type ScopeType = (typeof SCOPE_TYPE)[keyof typeof SCOPE_TYPE]
+export type DataScopeDimensionCode =
+  (typeof DATA_SCOPE_DIMENSIONS)[keyof typeof DATA_SCOPE_DIMENSIONS]
 
-export const SCOPE_TYPE_LABEL: Record<ScopeType, string> = {
-  [SCOPE_TYPE.BUSINESS_DOMAIN]: '业务域',
-  [SCOPE_TYPE.REGION]: '区域',
-  [SCOPE_TYPE.CHANNEL]: '渠道',
-  [SCOPE_TYPE.POLICE_TYPE]: '警种',
+export const DATA_SCOPE_DIMENSION_LABEL: Record<DataScopeDimensionCode, string> = {
+  ALL: '全部',
+  CHANNEL: '渠道',
+  REGION: '区域',
+  UNIT: '单位',
+  BUSINESS_DOMAIN: '业务域',
+  POLICE_TYPE: '警种',
+  SELF: '本人',
 }
 
 export interface DataPermissionVO {
-  scopeType: ScopeType
+  scopeType: DataScopeDimensionCode
+  scopeTypeLabel: string
   scopeValues: string[]
 }
 
 export interface DataPermissionUpdateRequest {
-  scopeType: ScopeType
+  scopeType: DataScopeDimensionCode
   scopeValues: string[]
 }
 
