@@ -57,20 +57,25 @@
 - [ ] 前端业务侧单位列表/分配入口**未实现**
 
 ### 8. 系统管理 - 用户/角色
-- [ ] 用户列表页 `frontend/src/pages/system/users/index.tsx`（当前 9 行占位）
-- [ ] 新增/编辑用户、重置密码、启停用
-- [ ] 角色列表页 `frontend/src/pages/system/roles/index.tsx`（9 行占位）
-- [ ] 角色权限配置：菜单树 + 操作编码勾选
-- [ ] 修复用户创建时 `operatorId` 硬编码为 `1L` 的兜底逻辑
-- [ ] **后端 `UserController` 缺 `/reset-password` 与 `/status` 端点**（只有 5 个基础端点）
+- [x] ✅ 用户列表页 `frontend/src/pages/system/users/index.tsx`（搜索/分页/启停用/重置密码/数据权限）
+- [x] ✅ 角色列表页 `frontend/src/pages/system/roles/index.tsx`（内置角色保护 + 操作编码勾选）
+- [x] ✅ 角色权限配置：操作编码勾选（菜单树待后端补 `MenuController`，见 #9 续）
+- [x] ✅ 修复 `UserController.create` 中 `operatorId=1L` 硬编码，改读 `SecurityContext.getCurrentUserId()`
+- [x] ✅ `UserController` 补齐 `POST /{id}/reset-password` 与 `PUT /{id}/status` 端点
+- 提交：`498b750` 数据权限维度对齐 + `ea6ea8b` 系统管理前端（merge `ce50e9e` 已 push origin/main）
 
 ### 9. 数据权限配置
-- [x] ✅ 后端 `DataPermissionService`、`DataPermissionUpdateRequest`、`DataPermissionVO`（`50166df` 提交）
-- [x] ✅ 前端 `api/admin/dataPermission.ts`、`hooks/useAdminDataPermissions.ts`（`50166df` 提交）
-- [ ] ❌ **后端 `DataPermissionController` 缺失**（`/api/admin/users/{id}/data-permissions` 未实现）
-- [ ] ❌ 用户管理页面中"数据权限"配置 UI 缺失
-- [ ] ❌ 后台管理菜单中"数据权限"独立入口未加
-- [ ] ⚠️ **风险**：前端 `SCOPE_TYPE`（1=业务域 2=区域 3=渠道 4=警种）与 `AuthService.buildDataScope` / `DataScopeInterceptor` 的语义（1=ALL 2=CHANNEL 3=REGION 4=UNIT 5=SELF）不一致，且拦截器未配置 `business_domain`、`police_type` 字段映射。补 Controller/UI 前需先统一维度定义，否则权限过滤无法按预期工作
+- [x] ✅ 新增 `DataScopeDimension` 枚举作为 SSOT：`ALL / CHANNEL / REGION / UNIT / BUSINESS_DOMAIN / POLICE_TYPE / SELF`
+- [x] ✅ `V16 Flyway`：`t_data_permission.scope_type` 与 `t_role.data_scope_type` 由 SMALLINT 改 VARCHAR(32)，按 V2 字典翻译历史值
+- [x] ✅ `DataScope` 重写：`fromPermissions(List)` 静态构造；未知 scopeType 永不静默降级 ALL
+- [x] ✅ `AuthService.buildDataScope` 改用 `DataScope.fromPermissions`，根除 1=业务域/1=ALL、4=警种/4=UNIT 歧义
+- [x] ✅ 新增 `DataPermissionController`：`GET / PUT /api/admin/users/{userId}/data-permissions`
+- [x] ✅ 用户管理页"数据权限"弹窗（7 个维度逐项保存，ALL/SELF 无值，其他多值换行/逗号分隔）
+- [x] ✅ 前端 `DATA_SCOPE_DIMENSIONS` 字符串 code 替代数字 `SCOPE_TYPE`
+- [x] ✅ `RoleService` 补 `menuIds` / `operationCodes` 在 `t_role_menu` / `t_role_operation` 的整组覆盖
+- [x] ✅ 单测：`DataScopeTest`（16 用例） + `DataPermissionServiceTest`（7 用例） + `DataScopeIntegrationTest` 适配
+- 提交：`498b750` + `ea6ea8b`（merge `ce50e9e` 已 push origin/main）
+- 后续：业务域 / 警种维度已存到内存 `DataScope.businessDomainCodes / policeTypeCodes`，SQL 不直接生效；需要 service 层白名单二次过滤时复用该字段
 
 ### 10. 跟进记录 / 日程
 - [ ] 日程页（今日/未来 3 天/已完成）
@@ -113,8 +118,9 @@
 
 ### 15. 审计日志
 - [x] ✅ 后端 `AuditLogController` 3 端点（`/api/admin/audit-logs`）
-- [x] ✅ 前端 `pages/system/audit-log/index.tsx`（395 行）— 真实实现（`c0d0d9c` 提交）
-- [ ] ❌ **路由 `system/audit` 未注册**（当前 router 只有 system/users/roles/dictionary/units，缺少 audit）
+- [x] ✅ 前端 `pages/system/audit-log/index.tsx`（395 行）
+- [x] ✅ 路由 `system/audit` 已注册（`ea6ea8b` 提交）
+- 附加：路由 `system/channel` 也已注册（页面 582 行 + ChannelController/V15 seed 已就位，#7 中"渠道管理页"前置补齐）
 
 ### 16. 通知中心
 - [ ] 顶部导航消息角标（接 `NotificationController.count/unread`）
@@ -144,23 +150,26 @@
 
 ---
 
-## 当前进度概览（2026-07-02 `fb4a2aa` 盘点）
+## 当前进度概览（2026-07-03 `ce50e9e` 盘点）
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
-| 🔴 高优先级 10 项 | 1 | 3 | 6 |
+| 🔴 高优先级 10 项 | 4 | 1 | 5 |
 | 🟡 中优先级 4 项 | 2 | 1 | 1 |
-| 🟢 低优先级 6 项 | 0 | 3 | 3 |
-| **合计 20 项** | **3** | **7** | **10** |
+| 🟢 低优先级 6 项 | 1 | 2 | 3 |
+| **合计 20 项** | **7** | **4** | **9** |
 
 **最近合并的相关 commit**：
+- `ce50e9e` Merge branch 'feat/data-scope-align'
+- `ea6ea8b` feat(system): users/roles management UI and audit/channel routing
+- `498b750` feat(permission): align data scope dimensions and unblock admin module
 - `7920171` feat(project): add list page, filters, /process aggregator
 - `a35f4eb` feat(dashboard): add channel dashboard and project statistics
 - `984279d` feat(project): add detail page with process management and scoring
 - `c0d0d9c` feat(audit): add audit log query page
 - `82440af` feat(auth): add change password page
 - `84cd144` feat(router): add channel dashboard, rebate, and rebate-rates routes
-- `50166df` feat(permission): add user data permission management（缺 Controller）
+- `50166df` feat(permission): add user data permission management（已被 498b750 取代为 SSOT 枚举）
 - `77f0f04` feat(channel): add channel management backend and frontend
 - `8c7705f` chore(db): add audit columns and align menu paths（V15 seed）
 
@@ -168,11 +177,12 @@
 
 ## 建议执行顺序
 
-1. **统一数据权限维度定义**（#9）— 前端 `SCOPE_TYPE` 与 `DataScopeInterceptor` 语义不一致，先对齐再补 Controller/UI，否则权限过滤会按错误维度生效
-2. **补齐系统管理前端**（#8 用户/角色 + #9 数据权限 Controller + UI）— 让 admin 模块闭环
-3. **客户/商机/合同前端**（#4 #5 #6）— 让核心业务流转可用
-4. **修硬编码桩**（#6 ContractNodeService 1L/DEFAULT）
-5. **跟进与日程**（#10 #11）— 日常操作入口
-6. **通知中心 UI**（#16）— 站内信入口
-7. **首次登录强制改密**（#17）— 安全合规
-8. **中低优先级模块**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
+1. **商机/合同前端**（#5 #6 含 ContractNodeService 硬编码桩）— 核心业务流转补齐
+2. **跟进与日程**（#10 #11）— 日常操作入口
+3. **通知中心 UI**（#16）— 站内信入口
+4. **首次登录强制改密**（#17）— 安全合规
+5. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
+6. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
+7. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
+
+> ✅ 已完成：#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#15 审计路由（含 #7 system/channel 路由一并补齐）
