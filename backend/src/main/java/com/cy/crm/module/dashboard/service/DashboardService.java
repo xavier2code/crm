@@ -68,14 +68,16 @@ public class DashboardService {
                         .eq("status", 1)
         )));
 
-        BigDecimal totalAmount = contractMapper.selectList(
-                new QueryWrapper<Contract>()
-                        .in("project_id",
-                                projectMapper.selectList(
-                                        new QueryWrapper<Project>().eq("owner_bd_id", userId)
-                                ).stream().map(Project::getId).collect(Collectors.toList())
-                        )
-        ).stream().map(Contract::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 兜底：若 BD 名下无任何项目，projectIds 为空，IN () 在 PostgreSQL 中是非法 SQL，
+        // 需短路返回 0 而非继续拼装空 IN 子句。
+        List<Long> projectIds = projectMapper.selectList(
+                new QueryWrapper<Project>().eq("owner_bd_id", userId)
+        ).stream().map(Project::getId).collect(Collectors.toList());
+        BigDecimal totalAmount = projectIds.isEmpty()
+                ? BigDecimal.ZERO
+                : contractMapper.selectList(
+                        new QueryWrapper<Contract>().in("project_id", projectIds)
+                ).stream().map(Contract::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         vo.setTotalContractAmount(totalAmount);
 
         vo.setPendingTasks(Math.toIntExact(taskMapper.selectCount(
@@ -86,18 +88,21 @@ public class DashboardService {
         )));
 
         LocalDate today = LocalDate.now();
-        vo.setTodayFollowUpCount(Math.toIntExact(customerMapper.selectCount(
-                new QueryWrapper<Customer>()
-                        .eq("owner_user_id", userId)
-                        .in("id",
-                                opportunityMapper.selectList(
-                                        new QueryWrapper<Opportunity>()
-                                                .eq("submitted_by", userId)
-                                                .eq("status", 3)
-                                                .ge("last_follow_up_at", today.minusDays(30))
-                                ).stream().map(Opportunity::getCustomerId).collect(Collectors.toList())
-                        )
-        )));
+        // 兜底：若 30 天内无生效中商机，customerIds 为空，IN () 同样会触发 PG 语法错误。
+        List<Long> customerIds = opportunityMapper.selectList(
+                new QueryWrapper<Opportunity>()
+                        .eq("submitted_by", userId)
+                        .eq("status", 3)
+                        .ge("last_follow_up_at", today.minusDays(30))
+        ).stream().map(Opportunity::getCustomerId).collect(Collectors.toList());
+        int todayFollowUpCount = customerIds.isEmpty()
+                ? 0
+                : Math.toIntExact(customerMapper.selectCount(
+                        new QueryWrapper<Customer>()
+                                .eq("owner_user_id", userId)
+                                .in("id", customerIds)
+                ));
+        vo.setTodayFollowUpCount(todayFollowUpCount);
 
         Map<String, Integer> opportunityStatusMap = new LinkedHashMap<>();
         opportunityStatusMap.put("草稿", Math.toIntExact(opportunityMapper.selectCount(
@@ -258,6 +263,17 @@ public class DashboardService {
         ProjectStatisticsVO vo = new ProjectStatisticsVO();
 
         List<Long> projectIds = getUserProjectIds(userId, roleIds);
+
+        // 兜底：若用户名下无项目 (BD 且尚无任何项目)，projectIds 为空，IN () 在 PG 非法，
+        // 直接返回空统计 VO，避免对 t_project / t_project_milestone 跑空 IN 查询。
+        if (projectIds.isEmpty()) {
+            vo.setTotalProjects(0);
+            vo.setPNodeDistribution(new LinkedHashMap<>());
+            vo.setStage6Distribution(new LinkedHashMap<>());
+            vo.setCustomerLayerDistribution(new LinkedHashMap<>());
+            vo.setMilestoneStatistics(new ArrayList<>());
+            return vo;
+        }
 
         vo.setTotalProjects(projectIds.size());
 
