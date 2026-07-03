@@ -1,7 +1,7 @@
 # CRM 渠道版 - 未完成功能清单
 
 > 更新时间：2026-07-03
-> 基于 `CRM-渠道版-开发文档.md` 与当前 `main` 分支（`6025b64`）代码扫描结果
+> 基于 `CRM-渠道版-开发文档.md` 与当前 `main` 分支（`58a2518`）代码扫描结果
 > 标注图例：✅ 已完成 · 🟡 部分完成 · ❌ 未开始
 
 ---
@@ -40,6 +40,8 @@
 - [x] 报备保护提示（同客户+同业务域唯一）
 - [x] 商机转项目按钮（详情页 + 列表页跳转 `/project?createFromOpportunityId=X`）
 - [x] 后端 `OpportunityController` 7 个端点已完整（含 `submit`/`approve`）
+- 提交：`fa57d26` feat(opportunity): implement opportunity list, form, approval and convert-to-project
+- 合并：`200ae13` Merge branch 'feat/opportunity-frontend'
 
 ### 6. 合同管理
 - [x] ✅ 后端 `ContractController`（6 端点：分页/详情/创建/更新/状态变更/删除）已完整
