@@ -79,8 +79,11 @@ public class OpportunityVO {
     @Schema(description = "是否可编辑")
     private Boolean editable;
 
-    @Schema(description = "是否可提交")
+    @Schema(description = "是否可提交（仅草稿状态）")
     private Boolean submittable;
+
+    @Schema(description = "是否可重提（报备失败/报备失效，未用完恢复机会，未在冷却期）")
+    private Boolean resubmittable;
 
     @Schema(description = "是否可审批")
     private Boolean approvable;

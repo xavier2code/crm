@@ -160,8 +160,9 @@
 
 ### 18. 商机报备优化
 - [x] ✅ 48h 钉钉催办 scheduler（`OpportunityApprovalReminderScheduler`）— 站内信形式实现
-- [ ] 独立 re-submit 端点（当前用 `POST /{id}/submit` 复用）
-- [ ] 报备锁定 1 个月（`t_opportunity.locked_until` 字段已存在，逻辑未审）
+- [x] 独立 re-submit 端点 `POST /api/opportunities/{id}/resubmit`：`submit` 收紧为草稿→审批中，resubmit 处理 FAILED/EXPIRED 重提（`OpportunityController`）
+- [x] 报备锁定 1 个月：`OpportunityService.resubmitOpportunity` 校验 `submit_count < 2` + `cooling_until` 未到期（错误码 4002/4004），重新启用后清空 `cooling_until`；`OpportunityExpiryScheduler` 在 submit_count ≥ 2 时置 `cooling_until = +1m`
+- [x] 前端 `resubmitOpportunity` API + `useResubmitOpportunity` hook + 详情页/列表页"重提"按钮 + `OpportunityVO.resubmittable` 字段；冷却期展示 Tag
 
 ### 19. 销售分配梯队
 - [ ] 评估是否需要实现
@@ -192,8 +193,8 @@
 |---|---|---|---|
 | 🔴 高优先级 10 项 | 10 | 0 | 0 |
 | 🟡 中优先级 4 项 | 4 | 0 | 0 |
-| 🟢 低优先级 6 项 | 4 | 0 | 2 |
-| **合计 20 项** | **16** | **2** | **2** |
+| 🟢 低优先级 6 项 | 5 | 0 | 1 |
+| **合计 20 项** | **17** | **0** | **3** |
 
 **最近合并的相关 commit**：
 - `6025b64` Merge branch 'feat/reimbursement'

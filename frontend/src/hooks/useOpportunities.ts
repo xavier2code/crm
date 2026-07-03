@@ -7,6 +7,7 @@ import {
   updateOpportunity,
   deleteOpportunity,
   submitOpportunity,
+  resubmitOpportunity,
   approveOpportunity,
 } from '@/api/opportunity'
 
@@ -54,6 +55,17 @@ export function useSubmitOpportunity() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: submitOpportunity,
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] })
+      queryClient.invalidateQueries({ queryKey: ['opportunity', id] })
+    },
+  })
+}
+
+export function useResubmitOpportunity() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: resubmitOpportunity,
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] })
       queryClient.invalidateQueries({ queryKey: ['opportunity', id] })

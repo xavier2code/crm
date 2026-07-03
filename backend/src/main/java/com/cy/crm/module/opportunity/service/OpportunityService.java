@@ -175,19 +175,10 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
         if (opportunity == null) {
             throw BusinessException.resourceNotFound("报备");
         }
-        if (opportunity.getStatus() != STATUS_DRAFT && opportunity.getStatus() != STATUS_FAILED) {
-            throw new BusinessException(4009, "只有草稿或报备失败的记录可以提交");
-        }
-
-        // 检查冷却期
-        if (opportunity.getCoolingUntil() != null &&
-            opportunity.getCoolingUntil().isAfter(LocalDateTime.now())) {
-            long daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
-                LocalDateTime.now(), opportunity.getCoolingUntil()
-            );
-            throw new BusinessException(4010,
-                String.format("该报备仍在冷却期内，请 %d 天后再试", daysRemaining)
-            );
+        // submit 端点仅用于首次提交（草稿 -> 审批中）。
+        // 报备失败/报备失效后的重提请走 resubmitOpportunity，便于冷却期校验和审计日志区分。
+        if (opportunity.getStatus() != STATUS_DRAFT) {
+            throw new BusinessException(4009, "只有草稿状态的记录可以提交，报备失败/失效请使用重提");
         }
 
         checkProtection(opportunity.getCustomerId(), opportunity.getBusinessDomain(), id);
@@ -201,6 +192,69 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
                 .action(ACTION_SUBMIT)
                 .operatorId(userId)
                 .comment("提交审批");
+        approvalLogMapper.insert(logBuilder.build());
+
+        notifyApprovalDeadline(opportunity);
+    }
+
+    /**
+     * 重提报备。
+     * 支持两种来源：
+     * - 报备失败 (FAILED, 4)：驳回后 BD 编辑后再次提交，submit_count 计入统计
+     * - 报备失效 (EXPIRED, 5)：30 天未跟进导致失效，submit_count <= 1 时允许一次恢复机会
+     *
+     * 锁定 1 个月规则（与开发文档 3.4 / 18.1 一致）：
+     * - submit_count >= 2 时不允许重提，提示"已用完恢复机会，需等待 1 个月冷却期"
+     * - cooling_until 未到期时不允许重提，提示剩余天数
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void resubmitOpportunity(Long id, Long userId) {
+        Opportunity opportunity = opportunityMapper.selectById(id);
+        if (opportunity == null) {
+            throw BusinessException.resourceNotFound("报备");
+        }
+        if (opportunity.getStatus() != STATUS_FAILED && opportunity.getStatus() != STATUS_EXPIRED) {
+            throw new BusinessException(4009, "只有报备失败或报备失效的记录可以重提");
+        }
+
+        // IDOR 校验：仅原提交人可重提
+        Long currentUserId = SecurityContext.getCurrentUserId();
+        DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+        dataScopeValidator.validateCreatorAccess(currentUserId, opportunity.getSubmittedBy(), currentDataScope);
+
+        // submit_count 上限：每个报备仅 1 次恢复机会
+        int submitCount = opportunity.getSubmitCount() == null ? 0 : opportunity.getSubmitCount();
+        if (submitCount >= 2) {
+            throw new BusinessException(4002, "已用完恢复机会，需等待 1 个月冷却期");
+        }
+
+        // 冷却期校验：cooling_until 未到期则拒绝
+        if (opportunity.getCoolingUntil() != null &&
+            opportunity.getCoolingUntil().isAfter(LocalDateTime.now())) {
+            long daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(
+                LocalDateTime.now(), opportunity.getCoolingUntil()
+            );
+            throw new BusinessException(4004,
+                String.format("该报备仍在冷却期内，请 %d 天后再试", daysRemaining)
+            );
+        }
+
+        // 报备保护：同客户同业务域下不能有其它审批中/生效中的报备
+        checkProtection(opportunity.getCustomerId(), opportunity.getBusinessDomain(), id);
+
+        opportunity.setStatus(STATUS_PENDING);
+        opportunity.setSubmitCount(submitCount + 1);
+        opportunity.setCoolingUntil(null);
+        opportunityMapper.updateById(opportunity);
+
+        String comment = opportunity.getStatus() == STATUS_FAILED
+            ? String.format("驳回后重提 (第 %d 次)", submitCount + 1)
+            : String.format("失效后重提 (第 %d 次)", submitCount + 1);
+        ApprovalLogBuilder logBuilder = new ApprovalLogBuilder()
+                .opportunityId(id)
+                .action(ACTION_SUBMIT)
+                .operatorId(userId)
+                .comment(comment);
         approvalLogMapper.insert(logBuilder.build());
 
         notifyApprovalDeadline(opportunity);
@@ -324,9 +378,21 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
             }
         }
 
-        vo.setEditable(opportunity.getStatus() == STATUS_DRAFT || opportunity.getStatus() == STATUS_FAILED);
-        vo.setSubmittable(opportunity.getStatus() == STATUS_DRAFT || opportunity.getStatus() == STATUS_FAILED);
+        // editable/submittable：草稿 + 报备失败可编辑可提交
+        boolean isDraftOrFailed = opportunity.getStatus() == STATUS_DRAFT
+            || opportunity.getStatus() == STATUS_FAILED;
+        vo.setEditable(isDraftOrFailed);
+        vo.setSubmittable(opportunity.getStatus() == STATUS_DRAFT);
         vo.setApprovable(opportunity.getStatus() == STATUS_PENDING);
+
+        // resubmittable：报备失败/报备失效 且 submit_count < 2 且 不在冷却期
+        boolean isResubmittableSource = opportunity.getStatus() == STATUS_FAILED
+            || opportunity.getStatus() == STATUS_EXPIRED;
+        boolean underSubmitLimit = opportunity.getSubmitCount() == null
+            || opportunity.getSubmitCount() < 2;
+        boolean outOfCooling = opportunity.getCoolingUntil() == null
+            || !opportunity.getCoolingUntil().isAfter(LocalDateTime.now());
+        vo.setResubmittable(isResubmittableSource && underSubmitLimit && outOfCooling);
 
         return vo;
     }

@@ -32,6 +32,7 @@ import {
   useApproveOpportunity,
   useDeleteOpportunity,
   useOpportunities,
+  useResubmitOpportunity,
   useSubmitOpportunity,
 } from '@/hooks/useOpportunities'
 import type { OpportunityVO } from '@/api/opportunity'
@@ -79,6 +80,7 @@ export default function OpportunityPage() {
   )
 
   const submitMut = useSubmitOpportunity()
+  const resubmitMut = useResubmitOpportunity()
   const approveMut = useApproveOpportunity()
   const deleteMut = useDeleteOpportunity()
 
@@ -118,6 +120,18 @@ export default function OpportunityPage() {
       }
     },
     [message, submitMut],
+  )
+
+  const handleResubmit = useCallback(
+    async (record: OpportunityVO) => {
+      try {
+        await resubmitMut.mutateAsync(record.id!)
+        message.success('重提成功，已重新进入审批')
+      } catch (e) {
+        if (e instanceof Error) message.error(e.message)
+      }
+    },
+    [message, resubmitMut],
   )
 
   const handleDelete = useCallback(
@@ -222,6 +236,17 @@ export default function OpportunityPage() {
                 提交
               </Button>
             )}
+            {record.resubmittable && permissionCodes.includes('opportunity:submit') && (
+              <Button
+                type="link"
+                size="small"
+                icon={<PlayCircleOutlined />}
+                onClick={() => handleResubmit(record)}
+                loading={resubmitMut.isPending && resubmitMut.variables === record.id}
+              >
+                重提
+              </Button>
+            )}
             {record.approvable && permissionCodes.includes('opportunity:approve') && (
               <Button
                 type="link"
@@ -263,9 +288,12 @@ export default function OpportunityPage() {
       permissionCodes,
       submitMut.isPending,
       submitMut.variables,
+      resubmitMut.isPending,
+      resubmitMut.variables,
       deleteMut.isPending,
       deleteMut.variables,
       handleDelete,
+      handleResubmit,
       handleSubmit,
       openApprove,
     ],

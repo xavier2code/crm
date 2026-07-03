@@ -37,6 +37,10 @@ export function submitOpportunity(id: number) {
   return request<void>({ url: `/opportunities/${id}/submit`, method: 'POST' })
 }
 
+export function resubmitOpportunity(id: number) {
+  return request<void>({ url: `/opportunities/${id}/resubmit`, method: 'POST' })
+}
+
 export function approveOpportunity(id: number, data: OpportunityApproveRequest) {
   return request<void>({ url: `/opportunities/${id}/approve`, method: 'POST', data })
 }
