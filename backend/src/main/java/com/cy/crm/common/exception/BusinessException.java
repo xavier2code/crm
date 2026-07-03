@@ -108,6 +108,10 @@ public class BusinessException extends RuntimeException {
         return new BusinessException(2008, "账号已停用");
     }
 
+    public static BusinessException passwordTooWeak(String message) {
+        return new BusinessException(2009, "密码强度不足：" + message);
+    }
+
     public static BusinessException accountLocked() {
         return new BusinessException(2010, "账号已锁定，请30分钟后重试");
     }

@@ -1,6 +1,7 @@
 package com.cy.crm.module.admin.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.module.admin.entity.LoginFailure;
 import com.cy.crm.module.admin.entity.PasswordHistory;
 import com.cy.crm.module.admin.entity.User;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * 密码策略服务
@@ -47,6 +49,24 @@ public class PasswordPolicyService {
 
     @Value("${password.expire-days:90}")
     private int expireDays;
+
+    @Value("${password.min-length:8}")
+    private int minLength = 8;
+
+    @Value("${password.require-uppercase:true}")
+    private boolean requireUppercase = true;
+
+    @Value("${password.require-lowercase:true}")
+    private boolean requireLowercase = true;
+
+    @Value("${password.require-digit:true}")
+    private boolean requireDigit = true;
+
+    @Value("${password.require-special:true}")
+    private boolean requireSpecial = true;
+
+    @Value("${password.special-chars:!@#$%^&*()_+-=[]{}|;':\",./<>?}")
+    private String specialChars = "!@#$%^&*()_+-=[]{}|;':\",./<>?";
 
     private static final String LOGIN_LOCK_PREFIX = "login:lock:";
 
@@ -120,6 +140,32 @@ public class PasswordPolicyService {
 
         // TODO: 从密码历史表获取最后一次修改时间，检查是否超过90天
         return false;
+    }
+
+    /**
+     * 校验密码强度。
+     * 默认策略：长度 ≥8，且包含大写字母、小写字母、数字、特殊字符。
+     * 规则可通过 application.yml 的 password.* 配置调整。
+     */
+    public void validateStrength(String rawPassword) {
+        if (rawPassword == null || rawPassword.length() < minLength) {
+            throw BusinessException.passwordTooWeak("密码长度至少" + minLength + "位");
+        }
+        if (requireUppercase && !rawPassword.matches(".*[A-Z].*")) {
+            throw BusinessException.passwordTooWeak("密码需包含大写字母");
+        }
+        if (requireLowercase && !rawPassword.matches(".*[a-z].*")) {
+            throw BusinessException.passwordTooWeak("密码需包含小写字母");
+        }
+        if (requireDigit && !rawPassword.matches(".*\\d.*")) {
+            throw BusinessException.passwordTooWeak("密码需包含数字");
+        }
+        if (requireSpecial) {
+            String specialClass = "[" + Pattern.quote(specialChars) + "]";
+            if (!rawPassword.matches(".*" + specialClass + ".*")) {
+                throw BusinessException.passwordTooWeak("密码需包含特殊字符");
+            }
+        }
     }
 
     /**

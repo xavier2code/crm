@@ -2,6 +2,7 @@ package com.cy.crm.module.auth.service;
 
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.module.admin.mapper.DataPermissionMapper;
+import com.cy.crm.module.admin.mapper.DepartmentMapper;
 import com.cy.crm.module.admin.mapper.MenuMapper;
 import com.cy.crm.module.admin.mapper.RoleMenuMapper;
 import com.cy.crm.module.admin.mapper.RoleOperationMapper;
@@ -13,6 +14,7 @@ import com.cy.crm.security.JwtUtil;
 import com.cy.crm.module.admin.entity.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -56,6 +58,8 @@ class AuthServiceTest {
     private MenuMapper menuMapper;
     @Mock
     private DataPermissionMapper dataPermissionMapper;
+    @Mock
+    private DepartmentMapper departmentMapper;
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -160,6 +164,89 @@ class AuthServiceTest {
         assertEquals("access_token", response.getAccessToken());
         assertEquals("Bearer", response.getTokenType());
         verify(passwordPolicyService).resetFailureCount("test_user");
+    }
+
+    @Test
+    void login_shouldFillDepartmentInfoWhenUserHasDepartment() {
+        mockRequestContext();
+        lenient().when(httpServletRequest.getHeader(anyString())).thenReturn(null);
+        lenient().when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+
+        LoginRequest request = new LoginRequest();
+        request.setUsername("dept_user");
+        request.setPassword("correct_password");
+
+        User user = new User();
+        user.setId(4L);
+        user.setUsername("dept_user");
+        user.setRealName("部门用户");
+        user.setDepartmentId(10L);
+        user.setIsInitialPassword(0);
+        user.setPasswordChangedAt(java.time.LocalDateTime.now().minusDays(10));
+
+        com.cy.crm.module.admin.entity.Department department =
+                new com.cy.crm.module.admin.entity.Department();
+        department.setId(10L);
+        department.setName("华东大区");
+
+        when(captchaService.validateCaptcha(any(), any())).thenReturn(true);
+        when(passwordPolicyService.isAccountLocked("dept_user")).thenReturn(false);
+        when(authenticationManager.authenticate(any())).thenReturn(null);
+        when(userMapper.selectOne(any())).thenReturn(user);
+        when(userMapper.selectRolesByUserId(4L)).thenReturn(java.util.Collections.emptyList());
+        when(departmentMapper.selectById(10L)).thenReturn(department);
+        when(jwtUtil.generateAccessToken(any(), any(), any(), any(), any(), any())).thenReturn("access_token");
+        when(jwtUtil.generateRefreshToken(any())).thenReturn("refresh_token");
+        when(passwordPolicyService.getExpireDays()).thenReturn(90);
+        when(jwtUtil.extractJti(any())).thenReturn("jti-456");
+        when(jwtUtil.extractExpiration(any())).thenReturn(System.currentTimeMillis() / 1000 + 7200);
+
+        LoginResponse response = authService.login(request);
+
+        assertNotNull(response.getUserInfo());
+        assertEquals(10L, response.getUserInfo().getDepartmentId());
+        assertEquals("华东大区", response.getUserInfo().getDepartmentName());
+    }
+
+    @Test
+    void changePassword_shouldThrowWhenNewPasswordTooWeak() {
+        User user = new User();
+        user.setId(5L);
+        user.setUsername("user");
+        user.setPasswordHash("hashed_old");
+
+        when(userMapper.selectOne(any())).thenReturn(user);
+        when(passwordEncoder.matches("oldPass1!", "hashed_old")).thenReturn(true);
+        when(passwordPolicyService.isPasswordInHistory(5L, "weak")).thenReturn(false);
+        doThrow(BusinessException.passwordTooWeak("密码长度至少8位"))
+                .when(passwordPolicyService).validateStrength("weak");
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> authService.changePassword("user", "oldPass1!", "weak"));
+        assertEquals(2009, ex.getCode());
+        verify(userMapper, never()).updateById(ArgumentMatchers.any(User.class));
+    }
+
+    @Test
+    void changePassword_shouldSucceedWhenNewPasswordStrong() {
+        User user = new User();
+        user.setId(5L);
+        user.setUsername("user");
+        user.setPasswordHash("hashed_old");
+
+        when(userMapper.selectOne(any())).thenReturn(user);
+        when(passwordEncoder.matches("oldPass1!", "hashed_old")).thenReturn(true);
+        when(passwordEncoder.encode("NewPass1!")).thenReturn("hashed_new");
+        when(passwordPolicyService.isPasswordInHistory(5L, "NewPass1!")).thenReturn(false);
+
+        authService.changePassword("user", "oldPass1!", "NewPass1!");
+
+        verify(passwordPolicyService).validateStrength("NewPass1!");
+        assertEquals("hashed_new", user.getPasswordHash());
+        assertEquals(0, user.getIsInitialPassword());
+        assertNotNull(user.getPasswordChangedAt());
+        verify(userMapper).updateById(user);
+        verify(tokenBlacklistService).removeAllSessions("user");
     }
 
     // ========== getClientIp() Tests ==========
