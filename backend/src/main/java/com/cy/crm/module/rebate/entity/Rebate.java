@@ -21,4 +21,5 @@ public class Rebate extends BaseEntity {
     private Integer confirmStatus;
     private Integer paymentStatus;
     private Integer rebateType;
+    private Long paymentNodeId;
 }

@@ -113,8 +113,8 @@
 - [x] ✅ 前端 `pages/rebate/index.tsx`（469 行）+ `pages/rebate-rates/index.tsx`（260 行）
 - [x] ✅ 路由 `/business/rebate`、`/business/rebate/rates` 已注册
 - [x] ✅ V15 seed 加了"返利率配置"菜单（仅 CYBD）
-- [ ] ❌ 后端**未实现返利自动生成 scheduler**（业绩完成返利/回款返利/服务返利）
-- [ ] ❌ scheduler 中 30 天未跟进 → 报备失效已存在（`OpportunityExpiryScheduler`）但返利侧无定时
+- [x] ✅ 后端**已实现返利自动生成 scheduler**（业绩完成返利/回款返利/服务返利）
+- [x] ✅ scheduler 中 30 天未跟进 → 报备失效已存在（`OpportunityExpiryScheduler`）且返利侧已补定时任务（`RebateGenerationScheduler`）
 
 ### 13. 个人工作台
 - [x] ✅ 前端 `pages/dashboard/index.tsx`（110 行）已接 `useDashboard` 真实 API（`a35f4eb` 提交）
@@ -176,9 +176,9 @@
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
 | 🔴 高优先级 10 项 | 10 | 0 | 0 |
-| 🟡 中优先级 4 项 | 3 | 1 | 0 |
+| 🟡 中优先级 4 项 | 4 | 0 | 0 |
 | 🟢 低优先级 6 项 | 2 | 2 | 2 |
-| **合计 20 项** | **15** | **3** | **2** |
+| **合计 20 项** | **16** | **2** | **2** |
 
 **最近合并的相关 commit**：
 - `439012e` Merge branch 'feat/contract-management'
