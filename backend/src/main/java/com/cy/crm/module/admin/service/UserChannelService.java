@@ -58,6 +58,12 @@ public class UserChannelService {
         return enrich(userChannelMapper.selectList(qw));
     }
 
+    public long countByChannel(Long channelId) {
+        Long n = userChannelMapper.selectCount(
+                new QueryWrapper<UserChannel>().eq("channel_id", channelId));
+        return n == null ? 0L : n;
+    }
+
     public List<UserVO> listAssignableUsers(Integer assignType) {
         // 仅返回「启用状态」且「至少有一个分配类型」的用户；简单起见返回所有启用用户，让前端下拉过滤
         List<User> users = userMapper.selectList(
