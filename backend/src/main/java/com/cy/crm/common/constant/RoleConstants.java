@@ -45,4 +45,9 @@ public class RoleConstants {
      * 橙鹰负责人（单位主数据维护）
      */
     public static final String ORANGE_EAGLE_HEAD = "ORANGE_EAGLE_HEAD";
+
+    /**
+     * 财务
+     */
+    public static final String FINANCE = "FINANCE";
 }
