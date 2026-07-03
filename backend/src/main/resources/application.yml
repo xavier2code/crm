@@ -8,20 +8,22 @@ spring:
       max-file-size: 25MB
       max-request-size: 100MB
   datasource:
-    url: jdbc:postgresql://localhost:5432/crm
+    # 本地/开发环境共用 192.168.2.222 上的 PostgreSQL
+    url: jdbc:postgresql://192.168.2.222:5432/crm
     driver-class-name: org.postgresql.Driver
-    username: ${DB_USERNAME:crm}
-    password: ${DB_PASSWORD:crm}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:123456}
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
     out-of-order: true
   redis:
-    enabled: ${REDIS_ENABLED:false}
-    host: ${REDIS_HOST:localhost}
+    # 本地/开发环境共用 192.168.2.222 上的 Redis
+    enabled: ${REDIS_ENABLED:true}
+    host: ${REDIS_HOST:192.168.2.222}
     port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
+    password: ${REDIS_PASSWORD:123456}
     database: 0
     timeout: 3000
     lettuce:
