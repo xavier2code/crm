@@ -2,17 +2,23 @@ import type { components } from '@/types/api'
 
 import { request } from './client'
 
-type OpportunityPage = components['schemas']['PageOpportunityVO']
-type OpportunityVO = components['schemas']['OpportunityVO']
-type OpportunityRequest = components['schemas']['OpportunityRequest']
-type ApproveRequest = components['schemas']['OpportunityApproveRequest']
+export type OpportunityPage = components['schemas']['PageOpportunityVO']
+export type OpportunityVO = components['schemas']['OpportunityVO']
+export type OpportunityDetailVO = components['schemas']['OpportunityDetailVO']
+export type OpportunityRequest = components['schemas']['OpportunityRequest']
+export type OpportunityApproveRequest = components['schemas']['OpportunityApproveRequest']
 
-export function getOpportunities(params: { current?: number; size?: number; status?: number }) {
+export function getOpportunities(params: {
+  current?: number
+  size?: number
+  status?: number
+  keyword?: string
+}) {
   return request<OpportunityPage>({ url: '/opportunities', method: 'GET', params })
 }
 
 export function getOpportunity(id: number) {
-  return request<OpportunityVO>({ url: `/opportunities/${id}`, method: 'GET' })
+  return request<OpportunityDetailVO>({ url: `/opportunities/${id}`, method: 'GET' })
 }
 
 export function createOpportunity(data: OpportunityRequest) {
@@ -31,10 +37,6 @@ export function submitOpportunity(id: number) {
   return request<void>({ url: `/opportunities/${id}/submit`, method: 'POST' })
 }
 
-export function approveOpportunity(id: number, data: ApproveRequest) {
+export function approveOpportunity(id: number, data: OpportunityApproveRequest) {
   return request<void>({ url: `/opportunities/${id}/approve`, method: 'POST', data })
-}
-
-export function rejectOpportunity(id: number, data: ApproveRequest) {
-  return request<void>({ url: `/opportunities/${id}/reject`, method: 'POST', data })
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   App,
   Button,
@@ -15,7 +15,7 @@ import {
 } from 'antd'
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import type { ColumnsType } from 'antd/es/table'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 
 import { PageHeader } from '@/components/PageHeader'
@@ -63,6 +63,7 @@ const statusMap = new Map(statusOptions.map((s) => [s.value, s]))
 
 export default function ProjectPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { permissionCodes } = useAuthStore()
   const canCreate = permissionCodes.includes('project:create')
 
@@ -97,6 +98,17 @@ export default function ProjectPage() {
       })),
     [opportunitiesQuery.data],
   )
+
+  // 从商机报备跳转过来时自动打开创建弹窗并预选商机
+  useEffect(() => {
+    const oppIdParam = searchParams.get('createFromOpportunityId')
+    if (oppIdParam && canCreate) {
+      const oppId = Number(oppIdParam)
+      form.setFieldsValue({ opportunityId: oppId })
+      setCreateOpen(true)
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, canCreate, form, setSearchParams])
 
   const handleTableChange = (pagination: TablePaginationConfig) => {
     setParams((p) => ({
