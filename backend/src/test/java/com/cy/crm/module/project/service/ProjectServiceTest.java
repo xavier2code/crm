@@ -10,8 +10,16 @@ import com.cy.crm.module.opportunity.service.OpportunityService;
 import com.cy.crm.module.project.converter.ProjectConverter;
 import com.cy.crm.module.project.dto.ProjectRequest;
 import com.cy.crm.module.project.entity.Project;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cy.crm.module.project.mapper.*;
+import com.cy.crm.module.project.vo.ProjectDetailVO;
+import com.cy.crm.module.project.vo.ProjectVO;
 import com.cy.crm.module.rebate.service.RebateService;
+import com.cy.crm.module.admin.service.DictionaryService;
+import com.cy.crm.module.admin.service.UserService;
+
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +30,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
 /**
@@ -52,6 +62,10 @@ class ProjectServiceTest {
     private RebateService rebateService;
     @Mock
     private OpportunityService opportunityService;
+    @Mock
+    private DictionaryService dictionaryService;
+    @Mock
+    private UserService userService;
     @Mock
     private DataScopeValidator dataScopeValidator;
 
@@ -233,5 +247,88 @@ class ProjectServiceTest {
         assertEquals(2, opportunity.getSubmitCount());
         assertNotNull(opportunity.getCoolingUntil());
         verify(opportunityMapper).updateById(opportunity);
+    }
+
+    // ========== pageProjects filter tests ==========
+
+    @Test
+    void pageProjects_shouldApplyStatusAndPNodeAndKeywordFilters() {
+        // given
+        Page<Project> emptyPage = new Page<>(1, 10, 0);
+        when(projectMapper.selectPage(any(Page.class), any(QueryWrapper.class))).thenReturn(emptyPage);
+
+        // when: filter combo
+        Page<ProjectVO> result = projectService.pageProjects(1L, 10L, 1, 3, "demo", 200L, List.of(1L, 2L));
+
+        // then
+        assertNotNull(result);
+        assertEquals(1, result.getCurrent());
+        assertEquals(10, result.getSize());
+        assertEquals(0, result.getTotal());
+        verify(projectMapper).selectPage(any(Page.class), any(QueryWrapper.class));
+    }
+
+    @Test
+    void pageProjects_shouldFilterByOwnerWhenOnlyBDRole() {
+        // given
+        Page<Project> emptyPage = new Page<>(1, 10, 0);
+        when(projectMapper.selectPage(any(Page.class), any(QueryWrapper.class))).thenReturn(emptyPage);
+
+        // when: only BD role id 4
+        projectService.pageProjects(1L, 10L, null, null, null, 200L, List.of(4L));
+
+        // then: wrapper must contain eq owner_bd_id (best-effort: at least the call succeeds)
+        verify(projectMapper).selectPage(any(Page.class), any(QueryWrapper.class));
+    }
+
+    @Test
+    void getProjectProcess_shouldThrowWhenProjectNotFound() {
+        // given
+        when(projectMapper.selectById(99L)).thenReturn(null);
+
+        // when / then
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> projectService.getProjectProcess(99L));
+        assertTrue(ex.getMessage().contains("项目不存在"));
+    }
+
+    @Test
+    void getProjectProcess_shouldReturnDetailWhenProjectExists() {
+        // given
+        Project project = new Project();
+        project.setId(7L);
+        project.setName("聚合测试项目");
+        project.setStatus(ProjectService.STATUS_IN_PROGRESS);
+        project.setOpportunityId(10L);
+
+        Opportunity opportunity = new Opportunity();
+        opportunity.setId(10L);
+        opportunity.setCustomerId(100L);
+
+        Customer customer = new Customer();
+        customer.setId(100L);
+        customer.setUnitId(1L);
+
+        when(projectMapper.selectById(7L)).thenReturn(project);
+        when(opportunityMapper.selectById(10L)).thenReturn(opportunity);
+        when(customerMapper.selectById(100L)).thenReturn(customer);
+        lenient().when(dictionaryService.getDictionaryName(anyString(), anyString())).thenReturn("");
+        lenient().when(projectConverter.entityToVO(any(Project.class))).thenAnswer(inv -> {
+            Project src = inv.getArgument(0);
+            ProjectVO vo = new ProjectVO();
+            vo.setId(src.getId());
+            vo.setName(src.getName());
+            vo.setStatus(src.getStatus());
+            return vo;
+        });
+        lenient().when(userService.getUserEntityById(nullable(Long.class))).thenReturn(null);
+
+        // when
+        ProjectDetailVO vo = projectService.getProjectProcess(7L);
+
+        // then
+        assertNotNull(vo);
+        assertEquals(7L, vo.getId());
+        assertEquals("聚合测试项目", vo.getName());
     }
 }

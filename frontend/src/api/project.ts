@@ -11,7 +11,13 @@ type MilestoneVO = components['schemas']['MilestoneVO']
 type PaymentNodeVO = components['schemas']['PaymentNodeVO']
 type ProjectScoreRequest = components['schemas']['ProjectScoreRequest']
 
-export function getProjects(params: { current?: number; size?: number; status?: number }) {
+export function getProjects(params: {
+  current?: number
+  size?: number
+  status?: number
+  pNode?: number
+  keyword?: string
+}) {
   return request<ProjectPage>({ url: '/projects', method: 'GET', params })
 }
 

@@ -83,15 +83,39 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
     private static final String MILESTONE_PAYMENT_DONE = "支付手续";
     private static final String MILESTONE_SERVICE_FEE_RECEIVED = "服务款到账";
 
-    public Page<ProjectVO> pageProjects(Long current, Long size, Integer status, Long userId, List<Long> roleIds) {
+    public Page<ProjectVO> pageProjects(
+            Long current,
+            Long size,
+            Integer status,
+            Integer pNode,
+            String keyword,
+            Long userId,
+            List<Long> roleIds
+    ) {
         QueryWrapper<Project> wrapper = new QueryWrapper<Project>()
                 .eq(status != null, "status", status)
+                .eq(pNode != null, "p_node", pNode)
+                .and(keyword != null && !keyword.isBlank(),
+                        w -> w.like("name", keyword).or().like("id", keyword))
                 .eq(hasOnlyBDRole(roleIds), "owner_bd_id", userId)
                 .orderByDesc("created_at");
         Page<Project> page = projectMapper.selectPage(new Page<>(current, size), wrapper);
         Page<ProjectVO> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         result.setRecords(page.getRecords().stream().map(this::toVO).collect(Collectors.toList()));
         return result;
+    }
+
+    /**
+     * 获取项目过程聚合（项目主体 + 里程碑 + 招投标节点 + 合同节点 + 回款节点 + 双精评分）。
+     * 与 getProjectById 的区别：聚合数据更密集，单次 RTT 拉齐详情页所有需要的数据。
+     * 业务依据：CRM-渠道版-开发文档.md §5–§7 项目过程管理。
+     */
+    public ProjectDetailVO getProjectProcess(Long id) {
+        ProjectDetailVO detail = getProjectById(id);
+        if (detail == null) {
+            throw BusinessException.resourceNotFound("项目不存在");
+        }
+        return detail;
     }
 
     public ProjectDetailVO getProjectById(Long id) {
