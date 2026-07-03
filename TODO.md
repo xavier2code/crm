@@ -137,10 +137,14 @@
 - 提交：`7358ca6`（merge `75c32a6` 已 push origin/main）
 
 ### 17. 认证登录优化
-- [ ] 登录响应 `userInfo.departmentId/departmentName` 填充（`AuthService.login` 有 `TODO`）
-- [ ] 密码强度校验（`AuthService.changePassword` 有 `TODO: 检查密码强度`）
-- [ ] 密码 90 天强制过期策略（`PasswordPolicyService.expireDays` 已支持配置，未接入强制改密流程）
-- [ ] **首次登录强制改密流程**（用户表有 `is_initial_password` 字段，登录接口未检测、change-password 后未重置）
+- [x] ✅ 首次登录强制改密：`AuthService.login` 检测 `is_initial_password=1` → 抛 2007
+- [x] ✅ 90 天强制过期策略：`t_user.password_changed_at`（V19） + `AuthService.login` 检测 `now - changed_at >= 90` → 抛 2007
+- [x] ✅ 改密清除标志：`AuthService.changePassword` 末尾设 `is_initial_password=0` + 更新 `passwordChangedAt`
+- [x] ✅ 前端 `/change-password` 路由注册（页面 100+ 行已存在但路由缺失 → 修）
+- [x] ✅ 前端 client 拦截器 2007 → `/change-password`（已存在）
+- [ ] ❌ 登录响应 `userInfo.departmentId/departmentName` 填充：阻塞于 `t_department` 表未建模，待产品确认
+- [ ] ❌ 密码强度校验（`AuthService.changePassword` 仍留 `TODO`）：等 `PasswordPolicyService` 加 `validateStrength` 后接入
+- 提交：`bd8962a`（merge `c61cc59` 已 push origin/main）
 
 ### 18. 商机报备优化
 - [x] ✅ 48h 钉钉催办 scheduler（`OpportunityApprovalReminderScheduler`）— 站内信形式实现
@@ -157,16 +161,18 @@
 
 ---
 
-## 当前进度概览（2026-07-03 `75c32a6` 盘点）
+## 当前进度概览（2026-07-03 `c61cc59` 盘点）
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
 | 🔴 高优先级 10 项 | 4 | 1 | 5 |
 | 🟡 中优先级 4 项 | 4 | 0 | 0 |
-| 🟢 低优先级 6 项 | 3 | 1 | 2 |
-| **合计 20 项** | **11** | **2** | **7** |
+| 🟢 低优先级 6 项 | 3 | 2 | 1 |
+| **合计 20 项** | **11** | **3** | **6** |
 
 **最近合并的相关 commit**：
+- `c61cc59` Merge branch 'feat/initial-password-rotation'
+- `bd8962a` feat(auth): force password change on first login and 90-day expiry
 - `75c32a6` Merge branch 'feat/notification-center-frontend'
 - `7358ca6` feat(notification): add notification center UI and header bell badge
 - `1dc1a2a` Merge branch 'feat/followup-task-frontend'
@@ -189,9 +195,8 @@
 ## 建议执行顺序
 
 1. **商机/合同前端**（#5 #6 含 ContractNodeService 硬编码桩）— 核心业务流转补齐（合同部分由 `feat-contract-management` 负责）
-2. **首次登录强制改密**（#17）— 安全合规
-3. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
-4. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
-5. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
+2. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
+3. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
+4. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
 
-> ✅ 已完成：#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI
+> ✅ 已完成：#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI、#17 首次登录强制改密 + 90 天过期
