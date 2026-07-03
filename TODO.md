@@ -1,7 +1,7 @@
 # CRM 渠道版 - 未完成功能清单
 
 > 更新时间：2026-07-03
-> 基于 `CRM-渠道版-开发文档.md` 与当前 `main` 分支（`cb638bc`）代码扫描结果
+> 基于 `CRM-渠道版-开发文档.md` 与当前 `main` 分支（`6025b64`）代码扫描结果
 > 标注图例：✅ 已完成 · 🟡 部分完成 · ❌ 未开始
 
 ---
@@ -166,8 +166,21 @@
 - [ ] 如需要：设计 `t_sales_team_config` 表及后端 CRUD
 
 ### 20. 报销管理
-- [ ] 与产品确认是否保留该模块（路由 `/reimbursement` 已注册，但 Flyway 种子中**未找到报销菜单**，且**后端无报销模块**）
-- [ ] 如保留：补齐前后端
+- [x] ✅ 确认保留（差旅/招待/单级审批/关联项目/可上传附件）
+- [x] ✅ 后端 V22：`t_reimbursement` + `t_reimbursement_attachment` + `reimbursement_type` 字典（TRAVEL/ENTERTAIN）+ 菜单 + 操作码 + 6 角色授权
+- [x] ✅ `module/reimbursement` 完整模块：Entity/Mapper/Converter/Service/2 Controller
+- [x] ✅ 生命周期 DRAFT→PENDING→APPROVED/REJECTED→PAID；申请人 IDOR 校验（6015）；状态机守卫（6011/6012/6014）
+- [x] ✅ 单级审批（CHANNEL_HEAD/ADMIN 走 `reimbursement:approve`）；财务/管理员 走 `reimbursement:pay` 标记已付款
+- [x] ✅ 关联项目必填；提交后项目名称快照防改名失真
+- [x] ✅ 附件上传/下载/删除：白名单 MIME + 20MB 上限（前端拦截 + 后端 `FileStorageService` 二次校验）
+- [x] ✅ 错误码段 6010-6018 复用现有 6xxx 段（不新开 7xxx）
+- [x] ✅ 业务基础：`FileStorageService` + `FileStorageProperties`（`base-path: ${FILE_STORAGE_PATH:./data/uploads}`）
+- [x] ✅ `RoleConstants.FINANCE` 补齐（V1 seed 已有角色但常量类未声明）
+- [x] ✅ 前端 `pages/reimbursement/index.tsx` 重写 5 行占位 → 594 行：6 个 Tab（待审批/已审批/已付款/已驳回/我的草稿/全部）+ 详情 Drawer + 申请 Modal + 审批 Modal + 附件上传/下载/删除
+- [x] ✅ 前端 `api/reimbursement.ts` 类型化 API 客户端（10 个端点 + 类型/状态/类型映射）
+- [x] ✅ 12 个单测覆盖：生命周期/IDOR/状态机/附件守卫；167/167 后端测试通过；前端 lint/build 零警告
+- 提交：`303bdc8`（merge `6025b64` 已 push origin/main）
+- 后续：业务域/警种应用层白名单（#9 续）未做（与本任务解耦）
 
 ---
 
@@ -181,6 +194,10 @@
 | **合计 20 项** | **16** | **2** | **2** |
 
 **最近合并的相关 commit**：
+- `6025b64` Merge branch 'feat/reimbursement'
+- `303bdc8` feat(reimbursement): implement reimbursement management module (TODO #20)
+- `4e9f10e` Merge branch 'feat/rebate-scheduler'
+- `649ba6d` feat(rebate): implement auto-generation scheduler for performance/payment/service rebates
 - `439012e` Merge branch 'feat/contract-management'
 - `e4fa99e` feat(contract): implement contract management list/detail/status pages and fix stubs
 - `cb638bc` docs(todo): mark #17 first-login + 90-day expiry as completed
@@ -213,4 +230,4 @@
 2. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
 3. **中低优先级**（#12 返利 scheduler、#17 密码强度校验、#19 #20）— 按产品节奏逐步补齐
 
-> ✅ 已完成：#6 合同管理（列表/详情/状态/新建/编辑/删除 + ContractNodeService/ContractService 硬编码桩修复）、#7 单位/渠道分配 4 级链路（业务侧 UI + ChannelController + module/unit）、#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI、#17 首次登录强制改密 + 90 天过期
+> ✅ 已完成：#6 合同管理（列表/详情/状态/新建/编辑/删除 + ContractNodeService/ContractService 硬编码桩修复）、#7 单位/渠道分配 4 级链路（业务侧 UI + ChannelController + module/unit）、#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI、#17 首次登录强制改密 + 90 天过期、#20 报销管理（差旅/招待 + 单级审批 + 关联项目 + 附件）

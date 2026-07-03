@@ -65,8 +65,6 @@ password:
   expire-days: 90 # 密码过期天数
 
 logging:
-  file:
-    path: ${LOG_PATH:./logs}
   level:
     root: INFO
     com.cy.crm: DEBUG
@@ -93,3 +91,6 @@ file:
     max-files-per-request: 10
     # 允许的 MIME 类型（白名单）
     allowed-types: application/pdf,image/jpeg,image/png,image/gif,image/webp,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip
+logging:
+  file:
+    path: ${LOG_PATH:/data/crm/logs}
