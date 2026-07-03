@@ -1,7 +1,7 @@
 # CRM 渠道版 - 未完成功能清单
 
 > 更新时间：2026-07-03
-> 基于 `CRM-渠道版-开发文档.md` 与当前 `main` 分支（`fb4a2aa`）代码扫描结果
+> 基于 `CRM-渠道版-开发文档.md` 与当前 `main` 分支（`cb638bc`）代码扫描结果
 > 标注图例：✅ 已完成 · 🟡 部分完成 · ❌ 未开始
 
 ---
@@ -42,13 +42,16 @@
 - [x] 后端 `OpportunityController` 7 个端点已完整（含 `submit`/`approve`）
 
 ### 6. 合同管理
-- [x] ✅ 后端 `ContractController`（5 端点：分页/详情/创建/更新/状态变更）已完整
-- [x] ✅ 前端 `api/contract.ts` API 客户端已就位（28 行）
-- [ ] 前端合同列表页 `frontend/src/pages/contract/index.tsx`（4 行占位）
-- [ ] 合同详情/状态变更页
-- [ ] 后端修复 `ContractNodeService.getChannelIdFromProject` 硬编码桩（`return 1L`）— 文件位于 `backend/src/main/java/com/cy/crm/module/project/service/ContractNodeService.java:174-178`
-- [ ] 后端修复 `ContractNodeService.getProductCategoryFromProject` 硬编码桩（`return "DEFAULT"`）— 同文件 line 180-184
-- [ ] 合同与项目关联选择
+- [x] ✅ 后端 `ContractController`（6 端点：分页/详情/创建/更新/状态变更/删除）已完整
+- [x] ✅ 前端 `api/contract.ts` API 客户端已就位
+- [x] ✅ 前端合同列表页 `frontend/src/pages/contract/index.tsx`（搜索、筛选、分页、新增、状态变更、删除）
+- [x] ✅ 合同详情/状态变更页 `frontend/src/pages/contract/detail/index.tsx`
+- [x] ✅ 合同新建/编辑页 `frontend/src/pages/contract/create/index.tsx`、`frontend/src/pages/contract/edit/index.tsx`
+- [x] ✅ 后端修复 `ContractNodeService.getChannelIdFromProject` 硬编码桩（`return 1L`）
+- [x] ✅ 后端修复 `ContractNodeService.getProductCategoryFromProject` 硬编码桩（`return "DEFAULT"`）
+- [x] ✅ 后端修复 `ContractService` 中同名硬编码桩
+- [x] ✅ 合同与项目关联选择
+- 提交：`e4fa99e` feat(contract): implement contract management list/detail/status pages and fix stubs
 
 ### 7. 单位/渠道分配（业务侧 4 级链路）
 - [x] ✅ 后端 `module/unit/` 业务侧模块：`UnitAssignmentService` + controller + mapper（`fe9237d`）
@@ -168,16 +171,19 @@
 
 ---
 
-## 当前进度概览（2026-07-03 `4336a7e` 盘点）
+## 当前进度概览（2026-07-03 `cb638bc` 重新盘点）
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
-| 🔴 高优先级 10 项 | 5 | 0 | 5 |
-| 🟡 中优先级 4 项 | 4 | 0 | 0 |
-| 🟢 低优先级 6 项 | 3 | 2 | 1 |
-| **合计 20 项** | **12** | **2** | **6** |
+| 🔴 高优先级 10 项 | 10 | 0 | 0 |
+| 🟡 中优先级 4 项 | 3 | 1 | 0 |
+| 🟢 低优先级 6 项 | 2 | 2 | 2 |
+| **合计 20 项** | **15** | **3** | **2** |
 
 **最近合并的相关 commit**：
+- `439012e` Merge branch 'feat/contract-management'
+- `e4fa99e` feat(contract): implement contract management list/detail/status pages and fix stubs
+- `cb638bc` docs(todo): mark #17 first-login + 90-day expiry as completed
 - `4336a7e` Merge branch 'feat/unit-channel-assignment'
 - `ae1fd33` feat(unit): add business-side unit assignment 4-level chain
 - `c61cc59` Merge branch 'feat/initial-password-rotation'
@@ -203,9 +209,8 @@
 
 ## 建议执行顺序
 
-1. **商机/合同前端**（#5 #6 含 ContractNodeService 硬编码桩）— 核心业务流转补齐（合同部分由 `feat-contract-management` 负责）
-2. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
-3. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
-4. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
+1. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
+2. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
+3. **中低优先级**（#12 返利 scheduler、#17 密码强度校验、#19 #20）— 按产品节奏逐步补齐
 
-> ✅ 已完成：#7 单位/渠道分配 4 级链路（业务侧 UI + ChannelController + module/unit）、#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI、#17 首次登录强制改密 + 90 天过期
+> ✅ 已完成：#6 合同管理（列表/详情/状态/新建/编辑/删除 + ContractNodeService/ContractService 硬编码桩修复）、#7 单位/渠道分配 4 级链路（业务侧 UI + ChannelController + module/unit）、#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI、#17 首次登录强制改密 + 90 天过期
