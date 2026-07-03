@@ -7,7 +7,7 @@
 --   - 历史数字按 V2 字典（1=ALL/2=CHANNEL/3=REGION/4=DEPT/5=SELF）翻译为枚举 code
 --   - DataPermissionService 旧 1=业务域/4=警种 与 AuthService 1=ALL 冲突；
 --     V16 之后 DataScopeDimension 枚举为单一事实来源
--- 数据库兼容：H2 / PostgreSQL
+-- 数据库：PostgreSQL
 -- ========================================
 
 -- 1) t_data_permission.scope_type 列类型迁移

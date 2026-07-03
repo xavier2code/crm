@@ -65,7 +65,7 @@ CREATE TABLE t_opportunity (
 );
 
 -- 报备保护：同一客户同业务域只能有一个生效/审批中的报备
--- H2不支持部分索引，改用普通索引，应用层校验
+-- PostgreSQL 支持 partial index，但为简化数据校验逻辑，改用普通索引 + 应用层校验
 CREATE INDEX uk_opportunity_protection ON t_opportunity(customer_id, business_domain, status);
 CREATE INDEX idx_opportunity_submitted ON t_opportunity(submitted_by);
 CREATE INDEX idx_opportunity_status ON t_opportunity(status);

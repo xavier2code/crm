@@ -5,11 +5,11 @@
 --   * t_sales_team_config：区域下的销售梯队划分（后台可配置）
 --       - team_code / team_name：梯队编码/名称
 --       - region_code：区域字典 code
---       - unit_codes：该梯队包含的单位 code，逗号分隔（H2/PG 兼容）
+--       - unit_codes：该梯队包含的单位 code，逗号分隔
 --       - effective_from / effective_to：有效期
 --   * 菜单挂在系统管理（parent_id=6）下，路径 /system/sales-team
 --   * 操作权限：view（ADMIN/CYBD/CHANNEL_HEAD/REGION_HEAD）/ manage（ADMIN/CYBD）
--- 数据库兼容：H2 / PostgreSQL
+-- 数据库：PostgreSQL
 -- ========================================
 
 -- 1) 销售梯队配置表
