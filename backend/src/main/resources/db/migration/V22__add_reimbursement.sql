@@ -10,7 +10,7 @@
 --   * 操作权限：view / create / approve / pay
 --   * 角色授权：ADMIN 全权；CHANNEL_BD 创建/查看自己的；CHANNEL_HEAD 审批；
 --               CYBD 创建/查看；FINANCE 付款 + 查已审批；ORANGE_EAGLE_SALES 申报
--- 数据库兼容：H2 / PostgreSQL
+-- 数据库：PostgreSQL
 -- ========================================
 
 -- 1) 报销主表

@@ -1,6 +1,7 @@
 package com.cy.crm.module.contract.service;
 
 import com.cy.crm.common.exception.BusinessException;
+import com.cy.crm.config.AbstractPostgresIntegrationTest;
 import com.cy.crm.module.contract.dto.ContractRequest;
 import com.cy.crm.module.customer.entity.Customer;
 import com.cy.crm.module.customer.mapper.CustomerMapper;
@@ -18,10 +19,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -37,10 +36,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * (参见 V8__add_unique_constraints.sql)，该约束会在并发场景下
  * 阻止重复数据的插入，抛出 DataIntegrityViolationException。
  */
-@SpringBootTest
-@ActiveProfiles("test")
 @Transactional
-public class ContractServiceTest {
+public class ContractServiceTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private ContractService contractService;

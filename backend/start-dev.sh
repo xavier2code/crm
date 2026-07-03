@@ -1,6 +1,9 @@
 #!/bin/bash
 set -eu
 
+# 本地开发启动脚本（dev-local 外部 PostgreSQL/Redis 模式）
+# 默认 dev 模式也需要本地 PostgreSQL: jdbc:postgresql://localhost:5432/crm
+
 cd "$(dirname "$0")"
 
 PORT=8080

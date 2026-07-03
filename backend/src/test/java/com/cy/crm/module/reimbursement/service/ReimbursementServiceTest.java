@@ -19,13 +19,12 @@ import com.cy.crm.module.reimbursement.mapper.ReimbursementAttachmentMapper;
 import com.cy.crm.module.reimbursement.mapper.ReimbursementMapper;
 import com.cy.crm.security.DataScope;
 import com.cy.crm.security.JwtAuthenticationToken;
+import com.cy.crm.config.AbstractPostgresIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -45,10 +44,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *  - 非 APPROVED 不允许付款（抛 6011）
  *  - ReimbursementAttachment 仅申请人本人 + DRAFT/REJECTED 可删（抛 6015/6011）
  */
-@SpringBootTest
-@ActiveProfiles("test")
 @Transactional
-public class ReimbursementServiceTest {
+public class ReimbursementServiceTest extends AbstractPostgresIntegrationTest {
 
     @Autowired private ReimbursementService reimbursementService;
     @Autowired private ReimbursementMapper reimbursementMapper;

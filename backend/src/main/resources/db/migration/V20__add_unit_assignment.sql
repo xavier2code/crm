@@ -33,7 +33,7 @@ CREATE TABLE t_unit_assignment (
 );
 
 -- 同一 (单位, BD, 渠道[或 0 代表 BD 范围]) 唯一，避免重复指派。
--- H2 与 PG 均不支持 partial index WHERE 写法；改用 sentinel：BD 范围下 channel_id 存 0，
+-- PG 不支持 partial index WHERE 写法；改用 sentinel：BD 范围下 channel_id 存 0，
 -- Java 端读写时把 0 当作 null。CHECK 约束保持原语义（BD 范围禁止真 null）。
 ALTER TABLE t_unit_assignment ALTER COLUMN channel_id SET DEFAULT 0;
 

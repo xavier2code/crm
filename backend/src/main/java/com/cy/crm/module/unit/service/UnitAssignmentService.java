@@ -112,7 +112,7 @@ public class UnitAssignmentService {
         ua.setUnitId(unitId);
         ua.setUserId(request.getUserId());
         ua.setAssignScope(request.getAssignScope());
-        // BD 范围：channelId 存 0（sentinel）以兼容 H2/PG 普通 unique 索引
+        // BD 范围：channelId 存 0（sentinel）以兼容普通 unique 索引
         ua.setChannelId(SCOPE_BD.equals(request.getAssignScope())
                 ? 0L
                 : request.getChannelId());
