@@ -127,11 +127,14 @@
 - 附加：路由 `system/channel` 也已注册（页面 582 行 + ChannelController/V15 seed 已就位，#7 中"渠道管理页"前置补齐）
 
 ### 16. 通知中心
-- [ ] 顶部导航消息角标（接 `NotificationController.count/unread`）
-- [ ] 通知列表页（`unread` + `list` 端点已就绪）
-- [ ] 全部已读功能（`/read-all` 端点已就绪）
-- [ ] 48h 报备审批超时 scheduler 已实现（`OpportunityApprovalReminderScheduler`，每整点执行）
-- [ ] 30 天报备失效 scheduler 已实现（`OpportunityExpiryScheduler`，每天 02:00 执行）
+- [x] ✅ 顶部 Bell 角标 + Popover Top 5（BasicLayout NotificationBell 子组件）
+- [x] ✅ 通知中心页 `/notifications`（全部/未读/已读 Tab + 标已读 + 查看跳转）
+- [x] ✅ 全部已读（`POST /api/notifications/read-all`）
+- [x] ✅ 30s 轮询 + window focus 刷新（hooks/useNotifications.ts useUnreadCount）
+- [x] ✅ V18 菜单：`NOTIFICATION_CENTER` 全部角色可见，`notification:view` 操作权限
+- [x] ✅ 48h 报备审批超时 scheduler（`OpportunityApprovalReminderScheduler`，每整点）
+- [x] ✅ 30 天报备失效 scheduler（`OpportunityExpiryScheduler`，每天 02:00）
+- 提交：`7358ca6`（merge `75c32a6` 已 push origin/main）
 
 ### 17. 认证登录优化
 - [ ] 登录响应 `userInfo.departmentId/departmentName` 填充（`AuthService.login` 有 `TODO`）
@@ -154,16 +157,18 @@
 
 ---
 
-## 当前进度概览（2026-07-03 `1dc1a2a` 盘点）
+## 当前进度概览（2026-07-03 `75c32a6` 盘点）
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
 | 🔴 高优先级 10 项 | 4 | 1 | 5 |
 | 🟡 中优先级 4 项 | 4 | 0 | 0 |
-| 🟢 低优先级 6 项 | 1 | 2 | 3 |
-| **合计 20 项** | **9** | **3** | **8** |
+| 🟢 低优先级 6 项 | 3 | 1 | 2 |
+| **合计 20 项** | **11** | **2** | **7** |
 
 **最近合并的相关 commit**：
+- `75c32a6` Merge branch 'feat/notification-center-frontend'
+- `7358ca6` feat(notification): add notification center UI and header bell badge
 - `1dc1a2a` Merge branch 'feat/followup-task-frontend'
 - `59282ff` feat(followup-task): add follow-up and task management UI
 - `ce50e9e` Merge branch 'feat/data-scope-align'
@@ -183,11 +188,10 @@
 
 ## 建议执行顺序
 
-1. **商机/合同前端**（#5 #6 含 ContractNodeService 硬编码桩）— 核心业务流转补齐
-2. **通知中心 UI**（#16）— 站内信入口
-3. **首次登录强制改密**（#17）— 安全合规
-4. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
-5. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
-6. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
+1. **商机/合同前端**（#5 #6 含 ContractNodeService 硬编码桩）— 核心业务流转补齐（合同部分由 `feat-contract-management` 负责）
+2. **首次登录强制改密**（#17）— 安全合规
+3. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
+4. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
+5. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
 
-> ✅ 已完成：#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）
+> ✅ 已完成：#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）、#16 通知中心 UI
