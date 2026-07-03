@@ -160,8 +160,9 @@
 
 ### 18. 商机报备优化
 - [x] 48h 钉钉催办 scheduler（`OpportunityApprovalReminderScheduler`）— 站内信形式实现
-- [ ] 独立 re-submit 端点（当前用 `POST /{id}/submit` 复用）
-- [ ] 报备锁定 1 个月（`t_opportunity.locked_until` 字段已存在，逻辑未审）
+- [x] 独立 re-submit 端点 `POST /api/opportunities/{id}/resubmit`：`submit` 收紧为草稿→审批中，resubmit 处理 FAILED/EXPIRED 重提（`OpportunityController`）
+- [x] 报备锁定 1 个月：`OpportunityService.resubmitOpportunity` 校验 `submit_count < 2` + `cooling_until` 未到期（错误码 4002/4004），重新启用后清空 `cooling_until`；`OpportunityExpiryScheduler` 在 submit_count ≥ 2 时置 `cooling_until = +1m`
+- [x] 前端 `resubmitOpportunity` API + `useResubmitOpportunity` hook + 详情页/列表页"重提"按钮 + `OpportunityVO.resubmittable` 字段；冷却期展示 Tag
 - 后续：见 #21 已知代码问题 — `ProjectService:453` 项目完成时报备状态未实际更新
 
 ### 19. 销售分配梯队
@@ -203,8 +204,8 @@
 |---|---|---|---|
 | 高优先级 10 项 | 10 | 0 | 0 |
 | 中优先级 4 项 | 4 | 0 | 0 |
-| 低优先级 6 项 | 4 | 1 | 1 |
-| **合计 20 项** | **18** | **1** | **1** |
+| 低优先级 6 项 | 5 | 0 | 1 |
+| **合计 20 项** | **19** | **0** | **1** |
 
 **最近合并的相关 commit**：
 - `b829764` docs(todo): mark #17 auth login optimization as completed
@@ -246,6 +247,6 @@
 1. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
 2. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`（当前不存在，前端角色页只能配操作编码）
 3. **已知代码问题修复**（#21）— ProjectService 状态联动 + 审计日志、PasswordPolicyService 死代码清理、前端占位页面补齐
-4. **中低优先级**（#18 re-submit 端点、#19 销售梯队）— 按产品节奏逐步补齐
+4. **中低优先级**（#19 销售梯队）— 按产品节奏逐步补齐
 
 > 已完成：#6 合同管理、#7 单位/渠道分配、#8 系统管理前端、#9 数据权限维度对齐、#10 跟进、#11 任务、#12 返利管理（含 scheduler）、#13 个人工作台、#14 渠道工作台、#15 审计路由、#16 通知中心、#17 首次登录强制改密 + 90 天过期 + 密码强度校验、#20 报销管理

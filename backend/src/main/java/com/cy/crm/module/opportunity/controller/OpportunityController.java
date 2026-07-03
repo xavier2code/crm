@@ -66,12 +66,21 @@ public class OpportunityController {
         return ApiResult.success();
     }
 
-    @Operation(summary = "提交审批")
+    @Operation(summary = "提交审批（首次提交：草稿 -> 审批中）")
     @PostMapping("/{id}/submit")
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
     public ApiResult<Void> submitOpportunity(@PathVariable Long id) {
         Long userId = currentUserService.getCurrentUserId();
         opportunityService.submitOpportunity(id, userId);
+        return ApiResult.success();
+    }
+
+    @Operation(summary = "重提报备（报备失败/报备失效 -> 审批中，受冷却期与恢复次数限制）")
+    @PostMapping("/{id}/resubmit")
+    @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_BD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
+    public ApiResult<Void> resubmitOpportunity(@PathVariable Long id) {
+        Long userId = currentUserService.getCurrentUserId();
+        opportunityService.resubmitOpportunity(id, userId);
         return ApiResult.success();
     }
 

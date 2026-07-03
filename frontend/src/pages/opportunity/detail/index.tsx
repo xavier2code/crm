@@ -31,6 +31,7 @@ import {
   useApproveOpportunity,
   useDeleteOpportunity,
   useOpportunity,
+  useResubmitOpportunity,
   useSubmitOpportunity,
 } from '@/hooks/useOpportunities'
 import type { OpportunityDetailVO } from '@/api/opportunity'
@@ -63,6 +64,7 @@ export default function OpportunityDetailPage() {
   const { data: opp, isLoading } = useOpportunity(opportunityId)
 
   const submitMut = useSubmitOpportunity()
+  const resubmitMut = useResubmitOpportunity()
   const approveMut = useApproveOpportunity()
   const deleteMut = useDeleteOpportunity()
 
@@ -81,6 +83,7 @@ export default function OpportunityDetailPage() {
 
   const canEdit = opp.editable && permissionCodes.includes('opportunity:edit')
   const canSubmit = opp.submittable && permissionCodes.includes('opportunity:submit')
+  const canResubmit = opp.resubmittable && permissionCodes.includes('opportunity:submit')
   const canApprove = opp.approvable && permissionCodes.includes('opportunity:approve')
   const canDelete = opp.status === 1 && permissionCodes.includes('opportunity:delete')
   const canConvert = opp.status === 3 && permissionCodes.includes('project:create')
@@ -91,6 +94,15 @@ export default function OpportunityDetailPage() {
     try {
       await submitMut.mutateAsync(opportunityId)
       message.success('提交审批成功')
+    } catch (e) {
+      if (e instanceof Error) message.error(e.message)
+    }
+  }
+
+  const handleResubmit = async () => {
+    try {
+      await resubmitMut.mutateAsync(opportunityId)
+      message.success('重提成功，已重新进入审批')
     } catch (e) {
       if (e instanceof Error) message.error(e.message)
     }
@@ -154,6 +166,21 @@ export default function OpportunityDetailPage() {
                 </Button>
               </Popconfirm>
             )}
+            {canResubmit && (
+              <Popconfirm
+                title="确认重提报备？"
+                description={
+                  opp.status === 5
+                    ? '失效后仅 1 次恢复机会，重提后报备将进入审批中状态。'
+                    : '驳回后重提将重新进入审批流程，submit_count +1。'
+                }
+                onConfirm={handleResubmit}
+              >
+                <Button type="primary" icon={<PlayCircleOutlined />}>
+                  重提报备
+                </Button>
+              </Popconfirm>
+            )}
             {canApprove && (
               <Button type="primary" icon={<CheckCircleOutlined />} onClick={openApprove}>
                 审批
@@ -210,7 +237,11 @@ export default function OpportunityDetailPage() {
           <Descriptions.Item label="失效时间">
             {opp.expiredAt ? dayjs(opp.expiredAt).format('YYYY-MM-DD HH:mm') : '-'}</Descriptions.Item>
           <Descriptions.Item label="冷却期截止">
-            {opp.coolingUntil ? dayjs(opp.coolingUntil).format('YYYY-MM-DD HH:mm') : '-'}</Descriptions.Item>
+            {opp.coolingUntil ? dayjs(opp.coolingUntil).format('YYYY-MM-DD HH:mm') : '-'}
+            {opp.coolingUntil && dayjs(opp.coolingUntil).isAfter(dayjs()) && (
+              <Tag color="red" style={{ marginLeft: 8 }}>冷却中</Tag>
+            )}
+          </Descriptions.Item>
           <Descriptions.Item label="审批人">{opp.approvedByName || '-'}</Descriptions.Item>
           <Descriptions.Item label="审批时间">
             {opp.approvedAt ? dayjs(opp.approvedAt).format('YYYY-MM-DD HH:mm') : '-'}</Descriptions.Item>

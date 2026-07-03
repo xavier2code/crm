@@ -2869,8 +2869,10 @@ export interface components {
             createdAt?: string;
             /** @description 是否可编辑 */
             editable?: boolean;
-            /** @description 是否可提交 */
+            /** @description 是否可提交（仅草稿状态） */
             submittable?: boolean;
+            /** @description 是否可重提（报备失败/报备失效，未用完恢复机会，未在冷却期） */
+            resubmittable?: boolean;
             /** @description 是否可审批 */
             approvable?: boolean;
         };
@@ -3030,8 +3032,10 @@ export interface components {
             createdAt?: string;
             /** @description 是否可编辑 */
             editable?: boolean;
-            /** @description 是否可提交 */
+            /** @description 是否可提交（仅草稿状态） */
             submittable?: boolean;
+            /** @description 是否可重提（报备失败/报备失效，未用完恢复机会，未在冷却期） */
+            resubmittable?: boolean;
             /** @description 是否可审批 */
             approvable?: boolean;
             /**
