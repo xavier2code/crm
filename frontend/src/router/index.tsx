@@ -26,6 +26,8 @@ const UsersPage = lazy(() => import('@/pages/system/users'))
 const RolesPage = lazy(() => import('@/pages/system/roles'))
 const DictionaryPage = lazy(() => import('@/pages/system/dictionary'))
 const UnitsPage = lazy(() => import('@/pages/system/units'))
+const AuditLogPage = lazy(() => import('@/pages/system/audit-log'))
+const ChannelPage = lazy(() => import('@/pages/system/channel'))
 const BusinessPage = lazy(() => import('@/pages/business'))
 const ReimbursementPage = lazy(() => import('@/pages/reimbursement'))
 const ForbiddenPage = lazy(() => import('@/pages/error/403'))
@@ -233,6 +235,22 @@ export function Router() {
             element={
               <LazyWrapper>
                 <UnitsPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="system/audit"
+            element={
+              <LazyWrapper>
+                <AuditLogPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="system/channel"
+            element={
+              <LazyWrapper>
+                <ChannelPage />
               </LazyWrapper>
             }
           />
