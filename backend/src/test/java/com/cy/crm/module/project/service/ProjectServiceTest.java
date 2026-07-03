@@ -1,5 +1,6 @@
 package com.cy.crm.module.project.service;
 
+import com.cy.crm.common.aspect.AuditLogWriter;
 import com.cy.crm.common.exception.BusinessException;
 import com.cy.crm.module.customer.entity.Customer;
 import com.cy.crm.module.customer.mapper.CustomerMapper;
@@ -68,6 +69,8 @@ class ProjectServiceTest {
     private UserService userService;
     @Mock
     private DataScopeValidator dataScopeValidator;
+    @Mock
+    private AuditLogWriter auditLogWriter;
 
     @InjectMocks
     private ProjectService projectService;

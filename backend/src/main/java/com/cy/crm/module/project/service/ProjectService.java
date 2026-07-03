@@ -19,6 +19,7 @@ import com.cy.crm.module.project.dto.*;
 import com.cy.crm.module.project.entity.*;
 import com.cy.crm.module.project.mapper.*;
 import com.cy.crm.common.annotation.AuditLog;
+import com.cy.crm.common.aspect.AuditLogWriter;
 import com.cy.crm.module.project.vo.ProjectDetailVO;
 import com.cy.crm.module.project.vo.ProjectVO;
 import com.cy.crm.module.project.vo.ProjectDetailVO.PaymentNodeVO;
@@ -54,6 +55,7 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
     private final com.cy.crm.module.opportunity.service.OpportunityService opportunityService;
     private final ProjectConverter projectConverter;
     private final DataScopeValidator dataScopeValidator;
+    private final AuditLogWriter auditLogWriter;
 
     // 项目状态常量
     public static final int STATUS_IN_PROGRESS = 1;
@@ -397,9 +399,15 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
         // 状态转换后的联动处理
         handleStatusTransitionSideEffects(project, currentStatus, newStatus, userId);
 
-        // TODO: 写入审计日志
-        // auditLogService.log("project", "status_change", projectId, userId,
-        //     String.format("项目状态从 %s 变更为 %s。原因：%s", getStatusName(currentStatus), getStatusName(newStatus), reason));
+        // 写入状态变更详细审计日志
+        com.cy.crm.module.admin.entity.AuditLog detailLog = new com.cy.crm.module.admin.entity.AuditLog();
+        detailLog.setUserId(userId);
+        detailLog.setModule("ProjectService");
+        detailLog.setMethod("transitionProjectStatus");
+        detailLog.setOperation("项目状态变更");
+        detailLog.setParams(String.format("项目ID=%d, 从=%s, 到=%s, 原因=%s",
+                projectId, getStatusName(currentStatus), getStatusName(newStatus), reason));
+        auditLogWriter.saveCustom(detailLog);
     }
 
     /**

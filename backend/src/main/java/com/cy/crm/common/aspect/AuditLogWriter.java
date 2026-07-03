@@ -49,6 +49,24 @@ public class AuditLogWriter {
         }
     }
 
+    @Async("auditLogExecutor")
+    public void saveCustom(AuditLog auditLog) {
+        try {
+            if (auditLog.getUserId() == null) {
+                auditLog.setUserId(0L);
+            }
+            if (auditLog.getUsername() == null || auditLog.getUsername().isBlank()) {
+                auditLog.setUsername("system");
+            }
+            if (auditLog.getCreatedAt() == null) {
+                auditLog.setCreatedAt(LocalDateTime.now());
+            }
+            auditLogMapper.insert(auditLog);
+        } catch (Exception e) {
+            log.error("保存自定义审计日志失败", e);
+        }
+    }
+
     private String getOperationName(String methodName) {
         if (methodName.startsWith("create") || methodName.startsWith("add") || methodName.startsWith("save")) {
             return "新增";
