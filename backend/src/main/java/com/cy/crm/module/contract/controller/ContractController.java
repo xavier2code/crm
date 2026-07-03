@@ -47,6 +47,14 @@ public class ContractController {
         return ApiResult.success(contractService.createContract(request));
     }
 
+    @Operation(summary = "删除合同")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")
+    public ApiResult<Void> deleteContract(@PathVariable Long id) {
+        contractService.deleteContract(id);
+        return ApiResult.success();
+    }
+
     @Operation(summary = "更新合同")
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority(T(com.cy.crm.common.constant.RoleConstants).CHANNEL_HEAD, T(com.cy.crm.common.constant.RoleConstants).CYBD)")

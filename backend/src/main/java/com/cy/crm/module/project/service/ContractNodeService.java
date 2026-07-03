@@ -11,6 +11,12 @@ import com.cy.crm.module.project.mapper.ContractNodeMapper;
 import com.cy.crm.module.project.mapper.ProjectMapper;
 import com.cy.crm.module.notification.service.NotificationService;
 import com.cy.crm.module.rebate.service.RebateService;
+import com.cy.crm.module.admin.entity.UserChannel;
+import com.cy.crm.module.admin.mapper.UserChannelMapper;
+import com.cy.crm.module.customer.entity.Customer;
+import com.cy.crm.module.customer.mapper.CustomerMapper;
+import com.cy.crm.module.opportunity.entity.Opportunity;
+import com.cy.crm.module.opportunity.mapper.OpportunityMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -29,6 +36,9 @@ public class ContractNodeService extends ServiceImpl<ContractNodeMapper, Contrac
     private final NotificationService notificationService;
     private final RebateService rebateService;
     private final ContractNodeConverter contractNodeConverter;
+    private final UserChannelMapper userChannelMapper;
+    private final CustomerMapper customerMapper;
+    private final OpportunityMapper opportunityMapper;
 
     /**
      * 获取项目合同节点
@@ -172,15 +182,32 @@ public class ContractNodeService extends ServiceImpl<ContractNodeMapper, Contrac
     }
 
     private Long getChannelIdFromProject(Project project) {
-        // TODO: 从项目关联的商机获取渠道ID
-        // 暂时返回默认值
-        return 1L;
+        if (project.getOpportunityId() == null) {
+            return null;
+        }
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity == null) {
+            return null;
+        }
+        Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+        if (customer == null) {
+            return null;
+        }
+        Long ownerUserId = customer.getOwnerUserId();
+        if (ownerUserId == null) {
+            return null;
+        }
+        // 取客户跟进人作为渠道 BD 时的归属渠道（按创建时间最早的）
+        List<UserChannel> assignments = userChannelMapper.selectList(
+                new QueryWrapper<UserChannel>()
+                        .eq("user_id", ownerUserId)
+                        .orderByAsc("assigned_at")
+        );
+        return assignments.isEmpty() ? null : assignments.get(0).getChannelId();
     }
 
     private String getProductCategoryFromProject(Project project) {
-        // TODO: 从项目获取产品类别
-        // 暂时返回默认值
-        return "DEFAULT";
+        return project.getProductCategory();
     }
 
     private ContractNode cloneNode(ContractNode source) {

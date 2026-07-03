@@ -9,6 +9,8 @@ import com.cy.crm.security.DataScope;
 import com.cy.crm.security.DataScopeValidator;
 import com.cy.crm.security.SecurityContext;
 import com.cy.crm.module.admin.service.UserService;
+import com.cy.crm.module.admin.entity.UserChannel;
+import com.cy.crm.module.admin.mapper.UserChannelMapper;
 import com.cy.crm.module.auth.service.CurrentUserService;
 import com.cy.crm.module.contract.converter.ContractConverter;
 import com.cy.crm.module.contract.dto.ContractRequest;
@@ -41,6 +43,7 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
     private final ProjectMapper projectMapper;
     private final OpportunityMapper opportunityMapper;
     private final CustomerMapper customerMapper;
+    private final UserChannelMapper userChannelMapper;
     private final UserService userService;
     private final RebateService rebateService;
     private final NotificationService notificationService;
@@ -113,6 +116,32 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
         }
 
         return contract.getId();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteContract(Long id) {
+        Contract contract = contractMapper.selectById(id);
+        if (contract == null) {
+            throw BusinessException.resourceNotFound("合同");
+        }
+
+        // IDOR protection: validate access to this contract
+        Project project = projectMapper.selectById(contract.getProjectId());
+        if (project == null) {
+            throw BusinessException.dataScopeDenied();
+        }
+
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity != null) {
+            Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+            if (customer != null) {
+                Long currentUserId = SecurityContext.getCurrentUserId();
+                DataScope currentDataScope = SecurityContext.getCurrentDataScope();
+                dataScopeValidator.validateAccess(currentUserId, project.getOwnerBdId(), customer.getUnitId(), currentDataScope);
+            }
+        }
+
+        contractMapper.deleteById(id);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -204,13 +233,31 @@ public class ContractService extends ServiceImpl<ContractMapper, Contract> {
     }
 
     private Long getChannelIdFromProject(Project project) {
-        // TODO: 从项目关联的商机获取渠道ID
-        return 1L;
+        if (project.getOpportunityId() == null) {
+            return null;
+        }
+        Opportunity opportunity = opportunityMapper.selectById(project.getOpportunityId());
+        if (opportunity == null) {
+            return null;
+        }
+        Customer customer = customerMapper.selectById(opportunity.getCustomerId());
+        if (customer == null) {
+            return null;
+        }
+        Long ownerUserId = customer.getOwnerUserId();
+        if (ownerUserId == null) {
+            return null;
+        }
+        List<UserChannel> assignments = userChannelMapper.selectList(
+                new QueryWrapper<UserChannel>()
+                        .eq("user_id", ownerUserId)
+                        .orderByAsc("assigned_at")
+        );
+        return assignments.isEmpty() ? null : assignments.get(0).getChannelId();
     }
 
     private String getProductCategoryFromProject(Project project) {
-        // TODO: 从项目获取产品类别
-        return "DEFAULT";
+        return project.getProductCategory();
     }
 
     private void notifyStatusChange(Contract contract, int oldStatus, int newStatus) {

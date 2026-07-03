@@ -6,6 +6,7 @@ import {
   createContract,
   updateContract,
   updateContractStatus,
+  deleteContract,
 } from '@/api/contract'
 
 export function useContracts(params: Parameters<typeof getContracts>[0]) {
@@ -37,6 +38,14 @@ export function useUpdateContract() {
       queryClient.invalidateQueries({ queryKey: ['contracts'] })
       queryClient.invalidateQueries({ queryKey: ['contract', variables.id] })
     },
+  })
+}
+
+export function useDeleteContract() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteContract,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['contracts'] }),
   })
 }
 
