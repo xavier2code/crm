@@ -68,10 +68,19 @@
     <logger name="org.hibernate" level="INFO"/>
     <logger name="com.baomidou.mybatisplus" level="INFO"/>
 
-    <!-- Root Logger -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <appender-ref ref="ERROR_FILE"/>
-    </root>
+    <!-- 开发环境（dev / dev-local / test）：仅控制台输出，不产生日志文件 -->
+    <springProfile name="dev | dev-local | test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- 生产环境（prod）：控制台 + 文件（滚动归档 + 错误分离） -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
 </configuration>

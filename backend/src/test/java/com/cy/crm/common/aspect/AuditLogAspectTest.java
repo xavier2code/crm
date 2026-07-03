@@ -5,6 +5,7 @@ import com.cy.crm.module.admin.mapper.AuditLogMapper;
 import com.cy.crm.module.auth.dto.LoginRequest;
 import com.cy.crm.module.auth.service.CurrentUserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mockito.Mockito;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,11 +27,15 @@ class AuditLogAspectTest {
     private CurrentUserService currentUserService;
 
     private ObjectMapper objectMapper;
+    private AuditLogWriter auditLogWriter;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        auditLogAspect = new AuditLogAspect(auditLogMapper, currentUserService, objectMapper);
+        auditLogWriter = new AuditLogWriter(auditLogMapper);
+        // Spy to allow real method execution while tracking calls
+        auditLogWriter = Mockito.spy(auditLogWriter);
+        auditLogAspect = new AuditLogAspect(auditLogWriter, currentUserService, objectMapper);
     }
 
     @Test

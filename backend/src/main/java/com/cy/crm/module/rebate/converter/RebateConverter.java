@@ -15,14 +15,27 @@ public interface RebateConverter {
 
     /**
      * 请求 DTO -> 实体
+     * id/createdAt/updatedAt/isDeleted/version 由框架自动管理
      */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @Mapping(target = "paymentNodeId", ignore = true)
     Rebate requestToEntity(RebateRequest request);
 
     /**
      * 更新实体
+     * id/rebateType/审计字段 不可通过请求覆盖
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "rebateType", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "isDeleted", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @Mapping(target = "paymentNodeId", ignore = true)
     void updateEntityFromRequest(RebateRequest request, @MappingTarget Rebate rebate);
 
     /**
