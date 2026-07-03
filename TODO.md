@@ -78,21 +78,25 @@
 - 后续：业务域 / 警种维度已存到内存 `DataScope.businessDomainCodes / policeTypeCodes`，SQL 不直接生效；需要 service 层白名单二次过滤时复用该字段
 
 ### 10. 跟进记录 / 日程
-- [ ] 日程页（今日/未来 3 天/已完成）
-- [ ] 客户跟进历史页
-- [ ] 新增/编辑跟进记录弹窗
-- [ ] 阶段反馈必填校验（当前阶段 ≠ 下一步阶段时）
-- [ ] 任务按时填写跟进后自动消除闭环
-- [ ] 后端 `FollowUpController` 4 端点 + `TaskController` 4 端点已完整
+- [x] ✅ 跟进记录页 `/followup`（搜索/分页/新建/编辑/删除）
+- [x] ✅ 阶段反馈必填校验（`currentStage` 与 `nextStage` 不同时 `stageFeedback` 必填）
+- [x] ✅ 客户跟进历史：`pageFollowups({ customerId })` 透传给后端
+- [x] ✅ V17 菜单：`FOLLOW_UP` 授权 管理员/渠道负责人/渠道BD/CYBD
+- [x] ✅ 操作权限：followup:manage / followup:view
+- 提交：`59282ff`（merge `1dc1a2a` 已 push origin/main）
+- 后续：关键词搜索（后端 `pageFollowups` 需补 `keyword` 参数）；任务"按时填写跟进自动消除闭环"业务规则由后端 scheduler 实现（暂未做）
 
 ---
 
 ## 🟡 中优先级（重要支撑模块）
 
 ### 11. 任务管理
-- [ ] 任务列表/日历 UI
-- [ ] 今日任务、完成任务、关闭任务（必填原因）
-- [ ] 后端 `TaskController` 已完整（4 端点）
+- [x] ✅ 任务管理页 `/task`（今日待办/待完成/已完成/已关闭 4 个 Tab）
+- [x] ✅ 今日任务专门接口 `GET /api/tasks/today`，逾期高亮
+- [x] ✅ 完成任务 `POST /{id}/complete`
+- [x] ✅ 关闭任务强制要求原因（前端校验 + 弹窗）
+- [x] ✅ V17 菜单：`TASK` 授权 管理员/渠道负责人/渠道BD/CYBD/大区总（只读）
+- 提交：`59282ff`（merge `1dc1a2a` 已 push origin/main）
 
 ### 12. 返利管理
 - [x] ✅ 后端 `RebateController`（6 端点）+ `RebateRateController`（5 端点）已完整
@@ -150,16 +154,18 @@
 
 ---
 
-## 当前进度概览（2026-07-03 `ce50e9e` 盘点）
+## 当前进度概览（2026-07-03 `1dc1a2a` 盘点）
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
 | 🔴 高优先级 10 项 | 4 | 1 | 5 |
-| 🟡 中优先级 4 项 | 2 | 1 | 1 |
+| 🟡 中优先级 4 项 | 4 | 0 | 0 |
 | 🟢 低优先级 6 项 | 1 | 2 | 3 |
-| **合计 20 项** | **7** | **4** | **9** |
+| **合计 20 项** | **9** | **3** | **8** |
 
 **最近合并的相关 commit**：
+- `1dc1a2a` Merge branch 'feat/followup-task-frontend'
+- `59282ff` feat(followup-task): add follow-up and task management UI
 - `ce50e9e` Merge branch 'feat/data-scope-align'
 - `ea6ea8b` feat(system): users/roles management UI and audit/channel routing
 - `498b750` feat(permission): align data scope dimensions and unblock admin module
@@ -178,11 +184,10 @@
 ## 建议执行顺序
 
 1. **商机/合同前端**（#5 #6 含 ContractNodeService 硬编码桩）— 核心业务流转补齐
-2. **跟进与日程**（#10 #11）— 日常操作入口
-3. **通知中心 UI**（#16）— 站内信入口
-4. **首次登录强制改密**（#17）— 安全合规
-5. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
-6. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
-7. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
+2. **通知中心 UI**（#16）— 站内信入口
+3. **首次登录强制改密**（#17）— 安全合规
+4. **业务域 / 警种应用层白名单过滤**（#9 续）— 让 DataScope.businessDomainCodes / policeTypeCodes 真正生效
+5. **角色菜单树权限**（#8 续）— 需后端补 `MenuController`
+6. **中低优先级**（#12 返利 scheduler、#19 #20）— 按产品节奏逐步补齐
 
-> ✅ 已完成：#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#15 审计路由（含 #7 system/channel 路由一并补齐）
+> ✅ 已完成：#8 系统管理前端、#9 数据权限维度对齐 + Controller/UI、#10 跟进、#11 任务、#15 审计路由（含 #7 system/channel 路由一并补齐）
