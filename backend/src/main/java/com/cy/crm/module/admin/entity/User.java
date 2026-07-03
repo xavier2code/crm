@@ -24,6 +24,7 @@ public class User extends AuditableEntity {
     private Integer status;
     private Integer isInitialPassword;
     private LocalDateTime lastLoginAt;
+    private Long departmentId;
 
     /**
      * 上次密码修改时间。null 时视为从未改过（新建用户 / 旧数据）。

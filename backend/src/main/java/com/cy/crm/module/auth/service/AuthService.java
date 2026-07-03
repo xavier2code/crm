@@ -1,11 +1,13 @@
 package com.cy.crm.module.auth.service;
 
+import com.cy.crm.module.admin.entity.Department;
 import com.cy.crm.module.admin.entity.User;
 import com.cy.crm.common.exception.BusinessException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import com.cy.crm.module.admin.mapper.DataPermissionMapper;
+import com.cy.crm.module.admin.mapper.DepartmentMapper;
 import com.cy.crm.module.admin.mapper.MenuMapper;
 import com.cy.crm.module.admin.mapper.RoleMenuMapper;
 import com.cy.crm.module.admin.mapper.RoleOperationMapper;
@@ -41,6 +43,7 @@ public class AuthService {
     private final RoleOperationMapper roleOperationMapper;
     private final MenuMapper menuMapper;
     private final DataPermissionMapper dataPermissionMapper;
+    private final DepartmentMapper departmentMapper;
     private final DictionaryService dictionaryService;
     private final PasswordEncoder passwordEncoder;
     private final CaptchaService captchaService;
@@ -124,7 +127,7 @@ public class AuthService {
             userInfo.setRealName(user.getRealName());
             userInfo.setPhone(user.getPhone());
             userInfo.setEmail(user.getEmail());
-            // TODO: 设置部门信息
+            fillDepartmentInfo(userInfo, user.getDepartmentId());
             response.setUserInfo(userInfo);
 
             // 设置角色、菜单树、权限编码、数据权限
@@ -139,6 +142,18 @@ public class AuthService {
             passwordPolicyService.recordLoginFailure(request.getUsername(), getClientIp());
             throw BusinessException.badCredentials();
         }
+    }
+
+    private void fillDepartmentInfo(LoginResponse.UserInfo userInfo, Long departmentId) {
+        if (departmentId == null) {
+            return;
+        }
+        Department department = departmentMapper.selectById(departmentId);
+        if (department == null) {
+            return;
+        }
+        userInfo.setDepartmentId(department.getId());
+        userInfo.setDepartmentName(department.getName());
     }
 
     /**
@@ -360,7 +375,8 @@ public class AuthService {
             throw BusinessException.paramError("不能使用最近使用过的密码");
         }
 
-        // TODO: 检查密码强度
+        // 检查密码强度
+        passwordPolicyService.validateStrength(newPassword);
 
         // 更新密码
         user.setPasswordHash(passwordEncoder.encode(newPassword));

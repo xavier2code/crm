@@ -63,6 +63,12 @@ password:
   max-fail-count: 5 # 最大失败次数
   lock-duration: 1800 # 账户锁定时长（秒）
   expire-days: 90 # 密码过期天数
+  min-length: 8 # 密码最小长度
+  require-uppercase: true # 是否要求大写字母
+  require-lowercase: true # 是否要求小写字母
+  require-digit: true # 是否要求数字
+  require-special: true # 是否要求特殊字符
+  special-chars: "!@#$%^&*()_+-=[]{}|;':\",./<>?" # 特殊字符集合
 
 logging:
   level:
