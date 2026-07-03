@@ -24,7 +24,7 @@ UPDATE t_data_permission SET scope_type_new =
 WHERE scope_type_new IS NULL;
 ALTER TABLE t_data_permission DROP COLUMN scope_type;
 ALTER TABLE t_data_permission RENAME COLUMN scope_type_new TO scope_type;
-ALTER TABLE t_data_permission ALTER COLUMN scope_type VARCHAR(32) NOT NULL;
+ALTER TABLE t_data_permission ALTER COLUMN scope_type SET NOT NULL;
 
 -- 2) t_role.data_scope_type 列类型迁移
 ALTER TABLE t_role ADD COLUMN data_scope_type_new VARCHAR(32);
@@ -40,5 +40,5 @@ UPDATE t_role SET data_scope_type_new =
 WHERE data_scope_type_new IS NULL;
 ALTER TABLE t_role DROP COLUMN data_scope_type;
 ALTER TABLE t_role RENAME COLUMN data_scope_type_new TO data_scope_type;
-ALTER TABLE t_role ALTER COLUMN data_scope_type VARCHAR(32) NOT NULL;
+ALTER TABLE t_role ALTER COLUMN data_scope_type SET NOT NULL;
 ALTER TABLE t_role ALTER COLUMN data_scope_type SET DEFAULT 'SELF';
