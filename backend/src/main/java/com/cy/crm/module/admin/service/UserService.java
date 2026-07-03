@@ -58,6 +58,8 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         User user = userConverter.requestToEntity(request);
         user.setPasswordHash(passwordEncoder.encode(INITIAL_PASSWORD));
         user.setIsInitialPassword(1);
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
         user.setCreatedBy(operatorId != null ? operatorId : 0L);
         try {
             userMapper.insert(user);
@@ -94,6 +96,8 @@ public class UserService extends ServiceImpl<UserMapper, User> {
         }
         user.setPasswordHash(passwordEncoder.encode(INITIAL_PASSWORD));
         user.setIsInitialPassword(1);
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
+        user.setPasswordChangedAt(java.time.LocalDateTime.now());
         userMapper.updateById(user);
     }
 

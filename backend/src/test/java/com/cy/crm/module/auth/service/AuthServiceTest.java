@@ -22,6 +22,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
@@ -137,6 +138,8 @@ class AuthServiceTest {
         user.setId(1L);
         user.setUsername("test_user");
         user.setRealName("测试用户");
+        user.setIsInitialPassword(0);
+        user.setPasswordChangedAt(java.time.LocalDateTime.now().minusDays(10));
 
         when(captchaService.validateCaptcha(any(), any())).thenReturn(true);
         when(passwordPolicyService.isAccountLocked("test_user")).thenReturn(false);
@@ -145,6 +148,7 @@ class AuthServiceTest {
         when(userMapper.selectRolesByUserId(1L)).thenReturn(java.util.Collections.emptyList());
         when(jwtUtil.generateAccessToken(any(), any(), any(), any(), any(), any())).thenReturn("access_token");
         when(jwtUtil.generateRefreshToken(any())).thenReturn("refresh_token");
+        when(passwordPolicyService.getExpireDays()).thenReturn(90);
         when(jwtUtil.extractJti(any())).thenReturn("jti-123");
         when(jwtUtil.extractExpiration(any())).thenReturn(System.currentTimeMillis() / 1000 + 7200);
 
@@ -324,4 +328,65 @@ class AuthServiceTest {
         lenient().when(servletRequestAttributes.getRequest()).thenReturn(httpServletRequest);
         RequestContextHolder.setRequestAttributes(servletRequestAttributes);
     }
+
+    @Test
+    void login_shouldThrow2007WhenIsInitialPassword() {
+        // 首次登录：is_initial_password=1 强制改密
+        mockRequestContext();
+        lenient().when(httpServletRequest.getHeader(anyString())).thenReturn(null);
+        lenient().when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+
+        LoginRequest request = new LoginRequest();
+        request.setUsername("new_user");
+        request.setPassword("any");
+
+        User user = new User();
+        user.setId(2L);
+        user.setUsername("new_user");
+        user.setRealName("新用户");
+        user.setIsInitialPassword(1);
+        user.setPasswordChangedAt(null);
+
+        when(captchaService.validateCaptcha(any(), any())).thenReturn(true);
+        when(passwordPolicyService.isAccountLocked("new_user")).thenReturn(false);
+        when(authenticationManager.authenticate(any())).thenReturn(null);
+        when(userMapper.selectOne(any())).thenReturn(user);
+        when(userMapper.selectRolesByUserId(2L)).thenReturn(java.util.Collections.emptyList());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> authService.login(request));
+        assertEquals(2007, ex.getCode());
+        assertTrue(ex.getMessage().contains("修改密码"));
+    }
+
+    @Test
+    void login_shouldThrow2007WhenPasswordExpired() {
+        // 密码超过 90 天未改
+        mockRequestContext();
+        lenient().when(httpServletRequest.getHeader(anyString())).thenReturn(null);
+        lenient().when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
+
+        LoginRequest request = new LoginRequest();
+        request.setUsername("old_user");
+        request.setPassword("any");
+
+        User user = new User();
+        user.setId(3L);
+        user.setUsername("old_user");
+        user.setRealName("老用户");
+        user.setIsInitialPassword(0);
+        user.setPasswordChangedAt(java.time.LocalDateTime.now().minusDays(120));
+
+        when(captchaService.validateCaptcha(any(), any())).thenReturn(true);
+        when(passwordPolicyService.isAccountLocked("old_user")).thenReturn(false);
+        when(authenticationManager.authenticate(any())).thenReturn(null);
+        when(userMapper.selectOne(any())).thenReturn(user);
+        when(userMapper.selectRolesByUserId(3L)).thenReturn(java.util.Collections.emptyList());
+        when(passwordPolicyService.getExpireDays()).thenReturn(90);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> authService.login(request));
+        assertEquals(2007, ex.getCode());
+    }
+
 }
