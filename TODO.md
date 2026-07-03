@@ -192,26 +192,28 @@
 ## 已知代码问题（代码扫描发现，需后续修复）
 
 ### 21. 后端遗留 TODO 与死代码
-- [ ] `ProjectService.java:400` — 状态变更后审计日志未写入（`// TODO: 写入审计日志`）
-- [ ] `ProjectService.java:453` — 项目完成时报备状态未实际更新（`// TODO: 需要确认报备的"已转化"状态值`），仅 log.info，opportunity 状态未改
-- [ ] `PasswordPolicyService.java:141` — `isPasswordExpired()` 永远返回 false（`// TODO: 从密码历史表获取...`），实际 90 天过期逻辑已在 `AuthService.login` 中通过 `passwordChangedAt` 实现，此方法为死代码
-- [ ] 前端占位页面：`pages/system/units/index.tsx`（9 行占位，管理侧单位管理）、`pages/business/index.tsx`（9 行占位，业务域落地页）
-- [ ] Flyway 迁移跳号：V11 → V13（无 V12 文件），可能为已删除的回滚脚本，建议确认
+- [x] `ProjectService.java:400` — 状态变更后审计日志未写入（`// TODO: 写入审计日志`）
+- [x] `ProjectService.java:453` — 项目完成时报备状态未实际更新（`// TODO: 需要确认报备的"已转化"状态值`），仅 log.info，opportunity 状态未改
+- [x] `PasswordPolicyService.java:141` — `isPasswordExpired()` 永远返回 false（`// TODO: 从密码历史表获取...`），实际 90 天过期逻辑已在 `AuthService.login` 中通过 `passwordChangedAt` 实现，此方法为死代码
+- [x] 前端占位页面：`pages/system/units/index.tsx`（9 行占位，管理侧单位管理）、`pages/business/index.tsx`（9 行占位，业务域落地页）
+- [x] Flyway 迁移跳号：V11 → V13（无 V12 文件），已补充 `V12__fix_system_unit_menu_path.sql`
 
-## 当前进度概览（2026-07-03 `b829764` 重新盘点）
+## 当前进度概览（2026-07-03 `064dd46` 重新盘点）
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
 | 高优先级 10 项 | 10 | 0 | 0 |
 | 中优先级 4 项 | 4 | 0 | 0 |
-| 低优先级 6 项 | 5 | 0 | 1 |
-| **合计 20 项** | **19** | **0** | **1** |
+| 低优先级 6 项 | 6 | 0 | 0 |
+| **合计 20 项** | **20** | **0** | **0** |
 
 **最近合并的相关 commit**：
-- `b829764` docs(todo): mark #17 auth login optimization as completed
-- `2356e91` Merge branch 'feat/auth-login-optimization'
-- `c09d563` feat(auth): fill department info in login response and enforce password strength
-- `58a2518` refactor(audit): extract async audit log save to AuditLogWriter bean
+- `064dd46` Merge branch 'worktree-fix-todo-known-issues'
+- `6d24bba` chore(db): add V12 migration to fix system unit menu path
+- `15137b9` feat(frontend): replace system units and business placeholders
+- `b93ba63` fix(auth): implement password expiration check
+- `001968e` fix(project): set opportunity to converted on project completion
+- `17b85a0` fix(project): write detailed status change audit log
 - `6025b64` Merge branch 'feat/reimbursement'
 - `303bdc8` feat(reimbursement): implement reimbursement management module (TODO #20)
 - `4e9f10e` Merge branch 'feat/rebate-scheduler'
