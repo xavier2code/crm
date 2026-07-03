@@ -141,6 +141,7 @@ class DashboardServiceChannelTest {
         // member 30 → 0 projects
         // 每个 member 调一次 projectMapper.selectList：member 10 → 1 个，member 20 → 2 个，member 30 → 0 个
         when(projectMapper.selectList(any(Wrapper.class)))
+                .thenReturn(List.of(project(100L, 10L), project(200L, 20L), project(201L, 20L)))  // 整渠道合同查询
                 .thenReturn(List.of(project(100L, 10L)))   // member 10
                 .thenReturn(List.of(project(200L, 20L), project(201L, 20L)))  // member 20
                 .thenReturn(Collections.emptyList());      // member 30
