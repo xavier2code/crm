@@ -1,6 +1,7 @@
 package com.cy.crm.module.admin.service;
 
 import com.cy.crm.common.exception.BusinessException;
+import com.cy.crm.module.admin.entity.User;
 import com.cy.crm.module.admin.mapper.LoginFailureMapper;
 import com.cy.crm.module.admin.mapper.PasswordHistoryMapper;
 import com.cy.crm.module.admin.mapper.UserMapper;
@@ -11,8 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.util.ReflectionTestUtils.*;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @ExtendWith(MockitoExtension.class)
 class PasswordPolicyServiceTest {
@@ -88,5 +91,43 @@ class PasswordPolicyServiceTest {
                 () -> passwordPolicyService.validateStrength("abcdef"));
         assertEquals(2009, ex.getCode());
         assertTrue(ex.getMessage().contains("数字"));
+    }
+
+    @Test
+    void isPasswordExpired_shouldReturnTrueForInitialPassword() {
+        User user = new User();
+        user.setIsInitialPassword(1);
+        user.setPasswordChangedAt(LocalDateTime.now().minusDays(30));
+
+        assertTrue(passwordPolicyService.isPasswordExpired(user));
+    }
+
+    @Test
+    void isPasswordExpired_shouldReturnTrueWhenPasswordChangedAtIsNull() {
+        User user = new User();
+        user.setIsInitialPassword(0);
+        user.setPasswordChangedAt(null);
+
+        assertTrue(passwordPolicyService.isPasswordExpired(user));
+    }
+
+    @Test
+    void isPasswordExpired_shouldReturnTrueWhenBeyondExpireDays() {
+        setField(passwordPolicyService, "expireDays", 90);
+        User user = new User();
+        user.setIsInitialPassword(0);
+        user.setPasswordChangedAt(LocalDateTime.now().minusDays(91));
+
+        assertTrue(passwordPolicyService.isPasswordExpired(user));
+    }
+
+    @Test
+    void isPasswordExpired_shouldReturnFalseWhenWithinExpireDays() {
+        setField(passwordPolicyService, "expireDays", 90);
+        User user = new User();
+        user.setIsInitialPassword(0);
+        user.setPasswordChangedAt(LocalDateTime.now().minusDays(30));
+
+        assertFalse(passwordPolicyService.isPasswordExpired(user));
     }
 }

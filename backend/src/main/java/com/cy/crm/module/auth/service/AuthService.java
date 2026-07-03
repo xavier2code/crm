@@ -295,16 +295,7 @@ public class AuthService {
      * - passwordChangedAt 为 null：兼容 V19 之前的旧用户，按过期处理（保守）
      */
     private boolean mustChangePassword(User user) {
-        if (user.getIsInitialPassword() != null && user.getIsInitialPassword() == 1) {
-            return true;
-        }
-        if (user.getPasswordChangedAt() == null) {
-            return true;
-        }
-        long days = java.time.Duration.between(
-                user.getPasswordChangedAt(),
-                java.time.LocalDateTime.now()).toDays();
-        return days >= passwordPolicyService.getExpireDays();
+        return passwordPolicyService.isPasswordExpired(user);
     }
 
     private DataScope buildDataScope(User user) {

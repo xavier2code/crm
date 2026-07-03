@@ -43,6 +43,7 @@ const STATUS_OPTIONS = [
   { value: 3, label: '生效中' },
   { value: 4, label: '报备失败' },
   { value: 5, label: '报备失效' },
+  { value: 6, label: '已转化' },
 ]
 
 const STATUS_COLOR: Record<number, string> = {
@@ -51,6 +52,7 @@ const STATUS_COLOR: Record<number, string> = {
   3: 'success',
   4: 'error',
   5: 'warning',
+  6: 'purple',
 }
 
 type TabKey = 'my' | 'all' | 'approval'
