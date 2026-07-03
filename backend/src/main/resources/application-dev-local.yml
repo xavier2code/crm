@@ -1,5 +1,5 @@
-# 本地开发环境配置
-# 连接外部 PostgreSQL 和 Redis（192.168.2.222）
+# 本地开发环境配置（连接外部 PostgreSQL 和 Redis）
+# 默认 dev 模式也需要本地 PostgreSQL: jdbc:postgresql://localhost:5432/crm
 # 启动方式：cd backend && SPRING_PROFILES_ACTIVE=dev-local ./gradlew bootRun
 
 spring:
