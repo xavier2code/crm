@@ -24,9 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -43,10 +41,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * 2. DataScopeValidator 服务级资源访问验证（单条查询/更新/删除）- Customer, Contract, Project
  * 3. 三种数据权限范围：SELF_ONLY、UNIT、ALL
  */
-@SpringBootTest
-@ActiveProfiles("test")
 @Transactional
-class DataScopeIntegrationTest {
+class DataScopeIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     private UserMapper userMapper;
