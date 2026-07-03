@@ -49,6 +49,7 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
     public static final int STATUS_ACTIVE = 3;
     public static final int STATUS_FAILED = 4;
     public static final int STATUS_EXPIRED = 5;
+    public static final int STATUS_CONVERTED = 6;
 
     // 商机阶段常量
     public static final String STAGE_DRAFT = "DRAFT";
@@ -350,6 +351,7 @@ public class OpportunityService extends ServiceImpl<OpportunityMapper, Opportuni
             case STATUS_ACTIVE -> "生效中";
             case STATUS_FAILED -> "报备失败";
             case STATUS_EXPIRED -> "报备失效";
+            case STATUS_CONVERTED -> "已转化";
             default -> "未知";
         };
     }

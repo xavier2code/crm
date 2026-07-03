@@ -458,7 +458,9 @@ public class ProjectService extends ServiceImpl<ProjectMapper, Project> {
             log.info("项目 {} 已终止，报备 {} 置为失效，冷却期1个月", project.getId(), opportunityId);
         } else if (newStatus == STATUS_COMPLETED) {
             // 项目完成：报备置为已转化
-            // TODO: 需要确认报备的"已转化"状态值
+            opportunity.setStatus(com.cy.crm.module.opportunity.service.OpportunityService.STATUS_CONVERTED);
+            opportunity.setExpiredAt(LocalDateTime.now());
+            opportunityMapper.updateById(opportunity);
             log.info("项目 {} 已完成，报备 {} 置为已转化", project.getId(), opportunityId);
         } else if (newStatus == STATUS_IN_PROGRESS && oldStatus == STATUS_INTERRUPTED) {
             // 项目中断恢复：报备自动激活（如果submit_count=0）

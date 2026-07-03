@@ -169,7 +169,9 @@ class ProjectServiceTest {
 
         // then
         assertEquals(ProjectService.STATUS_COMPLETED, project.getStatus());
+        assertEquals(OpportunityService.STATUS_CONVERTED, opportunity.getStatus());
         verify(projectMapper).updateById(project);
+        verify(opportunityMapper).updateById(opportunity);
     }
 
     @Test

@@ -43,6 +43,7 @@ const STATUS_FLOW = [
   { value: 3, title: '生效中', description: '可跟进、可转项目' },
   { value: 4, title: '报备失败', description: '可编辑后重提' },
   { value: 5, title: '报备失效', description: '超过 30 天未跟进' },
+  { value: 6, title: '已转化', description: '已转为项目' },
 ]
 
 const STATUS_COLOR: Record<number, string> = {
@@ -51,6 +52,7 @@ const STATUS_COLOR: Record<number, string> = {
   3: 'success',
   4: 'error',
   5: 'warning',
+  6: 'purple',
 }
 
 export default function OpportunityDetailPage() {
