@@ -18,7 +18,7 @@
 - **前端**：React 19 + TypeScript 6 + Vite 8 + Ant Design 6 + React Router 7 + TanStack Query 5 + Zustand 5
 - **后端**：Spring Boot 3.2 + Spring Security + JWT + MyBatis-Plus + Flyway + JDK 21
 - **构建工具**：Gradle 8.7
-- **数据库**：PostgreSQL（生产 / 外部开发环境），H2（默认本地开发）
+- **数据库**：PostgreSQL
 - **缓存**：Redis（可选，默认未启用）
 
 ## 项目结构
@@ -79,14 +79,22 @@ npm run dev          # 开发服务器，访问 http://localhost:8000
 
 ### 后端
 
-#### 方式一：默认本地开发（H2 + 无需 Redis）
+#### 方式一：默认本地开发（连接本地 PostgreSQL，无需 Redis）
+
+确保本地已启动 PostgreSQL 并创建数据库 `crm`（默认用户/密码：`crm`/`crm`）：
+
+```bash
+psql -U postgres -c "CREATE DATABASE crm;"
+psql -U postgres -c "CREATE USER crm WITH PASSWORD 'crm';"
+psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE crm TO crm;"
+```
 
 ```bash
 cd backend
 JWT_SECRET="your-32-byte-or-longer-secret-key" ./gradlew bootRun
 ```
 
-后端默认端口 `8080`，使用 H2 内存数据库并开启 `/h2-console`。
+后端默认端口 `8080`，使用 `jdbc:postgresql://localhost:5432/crm`。
 
 > 注意：`JWT_SECRET` 必须不少于 32 字节，否则应用启动会失败。
 
@@ -152,7 +160,7 @@ npm run preview    # 预览生产构建
 ```bash
 cd backend
 ./start-dev.sh                       # 使用 dev-local 配置启动
-./gradlew bootRun                    # 使用默认 dev 配置启动（H2）
+./gradlew bootRun                    # 使用默认 dev 配置启动（连接 localhost PostgreSQL）
 ./gradlew test                       # 运行全部测试
 ./gradlew test --tests com.cy.crm.module.customer.controller.CustomerControllerTest
 ./gradlew test --tests com.cy.crm.module.customer.controller.CustomerControllerTest.createCustomer
