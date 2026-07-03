@@ -2,10 +2,10 @@ import type { components } from '@/types/api'
 
 import { request } from '../client'
 
-type UnitPage = components['schemas']['PageUnitVO']
-type UnitVO = components['schemas']['UnitVO']
-type UnitRequest = components['schemas']['UnitRequest']
-type UnitList = components['schemas']['UnitVO'][]
+export type UnitPage = components['schemas']['PageUnitVO']
+export type UnitVO = components['schemas']['UnitVO']
+export type UnitRequest = components['schemas']['UnitRequest']
+export type UnitList = components['schemas']['UnitVO'][]
 
 export function getUnits(params: { keyword?: string; region?: string; current?: number; size?: number }) {
   return request<UnitPage>({ url: '/admin/units', method: 'GET', params })
