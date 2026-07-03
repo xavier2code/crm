@@ -17,6 +17,7 @@ const CustomerDetailPage = lazy(() => import('@/pages/customer/detail'))
 const CustomerEditPage = lazy(() => import('@/pages/customer/edit'))
 const OpportunityPage = lazy(() => import('@/pages/opportunity'))
 const ProjectPage = lazy(() => import('@/pages/project'))
+const ProjectDetailPage = lazy(() => import('@/pages/project/detail'))
 const ContractPage = lazy(() => import('@/pages/contract'))
 const UsersPage = lazy(() => import('@/pages/system/users'))
 const RolesPage = lazy(() => import('@/pages/system/roles'))
@@ -141,6 +142,14 @@ export function Router() {
             element={
               <LazyWrapper>
                 <ProjectPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="project/:id"
+            element={
+              <LazyWrapper>
+                <ProjectDetailPage />
               </LazyWrapper>
             }
           />

@@ -39,17 +39,26 @@ public class ProjectController {
     public ApiResult<Page<ProjectVO>> pageProjects(
             @RequestParam(defaultValue = "1") Long current,
             @RequestParam(defaultValue = "10") @Max(100) Long size,
-            @RequestParam(required = false) Integer status
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) Integer pNode,
+            @RequestParam(required = false) String keyword
     ) {
         Long userId = currentUserService.getCurrentUserId();
         List<Long> roleIds = currentUserService.getCurrentUserRoleIds();
-        return ApiResult.success(projectService.pageProjects(current, size, status, userId, roleIds));
+        return ApiResult.success(
+                projectService.pageProjects(current, size, status, pNode, keyword, userId, roleIds));
     }
 
     @Operation(summary = "获取项目详情")
     @GetMapping("/{id}")
     public ApiResult<ProjectDetailVO> getProject(@PathVariable Long id) {
         return ApiResult.success(projectService.getProjectById(id));
+    }
+
+    @Operation(summary = "获取项目过程聚合（详情 + 里程碑/招投标/合同/回款/双精）")
+    @GetMapping("/{id}/process")
+    public ApiResult<ProjectDetailVO> getProjectProcess(@PathVariable Long id) {
+        return ApiResult.success(projectService.getProjectProcess(id));
     }
 
     @Operation(summary = "创建项目")
