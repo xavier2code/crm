@@ -1,6 +1,6 @@
 # CRM 渠道版 - 未完成功能清单
 
-> 更新时间：2026-07-02
+> 更新时间：2026-07-03
 > 基于 `CRM-渠道版-开发文档.md` 与当前 `main` 分支（`fb4a2aa`）代码扫描结果
 > 标注图例：✅ 已完成 · 🟡 部分完成 · ❌ 未开始
 
@@ -9,19 +9,19 @@
 ## 🔴 高优先级（核心业务流程，建议优先补齐）
 
 ### 1. 项目列表页
-- [ ] 实现 `frontend/src/pages/project/index.tsx`（当前 3 行占位）
-- [ ] 项目列表：搜索、筛选、分页
-- [ ] 状态筛选：项目中 / 项目中断 / 项目完成 / 项目终止
-- [ ] P 级节点筛选
-- [ ] 新建项目入口（商机转项目）
-- [ ] 列表跳转详情页
+- [x] 实现 `frontend/src/pages/project/index.tsx`（当前 3 行占位）
+- [x] 项目列表：搜索、筛选、分页
+- [x] 状态筛选：项目中 / 项目中断 / 项目完成 / 项目终止
+- [x] P 级节点筛选
+- [x] 新建项目入口（商机转项目）
+- [x] 列表跳转详情页
 
 ### 2. 项目详情路由
-- [ ] 在 `frontend/src/router/index.tsx` 注册 `project/:id` 路由指向 `pages/project/detail/index.tsx`（719 行已实现，但当前 `path="project"` 仍指向 3 行占位列表）
+- [x] 在 `frontend/src/router/index.tsx` 注册 `project/:id` 路由指向 `pages/project/detail/index.tsx`（719 行已实现，但当前 `path="project"` 仍指向 3 行占位列表）
 
 ### 3. 项目过程聚合接口
-- [ ] 后端新增 `GET /api/projects/{id}/process` 或前端直接组合现有端点
-- [ ] 当前 `ProjectController` 已有 P 节点/招投标/合同/回款/双精评分等分散端点，缺少统一聚合
+- [x] 后端新增 `GET /api/projects/{id}/process` 或前端直接组合现有端点
+- [x] 当前 `ProjectController` 已有 P 节点/招投标/合同/回款/双精评分等分散端点，缺少统一聚合
 
 ### 4. 客户管理前端
 - [x] ✅ 客户列表页 `frontend/src/pages/customer/index.tsx`（搜索、分页、分配）
@@ -148,12 +148,13 @@
 
 | 类别 | 完成 | 部分 | 未开始 |
 |---|---|---|---|
-| 🔴 高优先级 10 项 | 0 | 4 | 6 |
+| 🔴 高优先级 10 项 | 1 | 3 | 6 |
 | 🟡 中优先级 4 项 | 2 | 1 | 1 |
 | 🟢 低优先级 6 项 | 0 | 3 | 3 |
-| **合计 20 项** | **2** | **8** | **10** |
+| **合计 20 项** | **3** | **7** | **10** |
 
 **最近合并的相关 commit**：
+- `7920171` feat(project): add list page, filters, /process aggregator
 - `a35f4eb` feat(dashboard): add channel dashboard and project statistics
 - `984279d` feat(project): add detail page with process management and scoring
 - `c0d0d9c` feat(audit): add audit log query page
