@@ -161,11 +161,13 @@ npm run preview    # 预览生产构建
 cd backend
 ./start-dev.sh                       # 使用 dev-local 配置启动
 ./gradlew bootRun                    # 使用默认 dev 配置启动（连接 localhost PostgreSQL）
-./gradlew test                       # 运行全部测试
+./gradlew test                       # 运行全部测试（需要本地 PostgreSQL 及 crm_test 数据库）
 ./gradlew test --tests com.cy.crm.module.customer.controller.CustomerControllerTest
 ./gradlew test --tests com.cy.crm.module.customer.controller.CustomerControllerTest.createCustomer
 ./gradlew bootJar -x test            # 打包，跳过测试
 ```
+
+> 测试默认连接 `jdbc:postgresql://localhost:5432/crm_test`，用户名/密码：`crm`/`crm`。可通过环境变量 `DB_USERNAME`、`DB_PASSWORD` 覆盖。
 
 ## 接口文档
 
