@@ -133,13 +133,18 @@ public class PasswordPolicyService {
      * 检查密码是否过期
      */
     public boolean isPasswordExpired(User user) {
-        // 简化实现：如果用户是初始密码，视为已过期
+        // 初始密码视为已过期
         if (user.getIsInitialPassword() != null && user.getIsInitialPassword() == 1) {
             return true;
         }
 
-        // TODO: 从密码历史表获取最后一次修改时间，检查是否超过90天
-        return false;
+        // passwordChangedAt 为空：兼容 V19 之前的旧用户，按过期处理
+        if (user.getPasswordChangedAt() == null) {
+            return true;
+        }
+
+        long days = Duration.between(user.getPasswordChangedAt(), LocalDateTime.now()).toDays();
+        return days >= expireDays;
     }
 
     /**

@@ -152,7 +152,6 @@ class AuthServiceTest {
         when(userMapper.selectRolesByUserId(1L)).thenReturn(java.util.Collections.emptyList());
         when(jwtUtil.generateAccessToken(any(), any(), any(), any(), any(), any())).thenReturn("access_token");
         when(jwtUtil.generateRefreshToken(any())).thenReturn("refresh_token");
-        when(passwordPolicyService.getExpireDays()).thenReturn(90);
         when(jwtUtil.extractJti(any())).thenReturn("jti-123");
         when(jwtUtil.extractExpiration(any())).thenReturn(System.currentTimeMillis() / 1000 + 7200);
 
@@ -197,7 +196,6 @@ class AuthServiceTest {
         when(departmentMapper.selectById(10L)).thenReturn(department);
         when(jwtUtil.generateAccessToken(any(), any(), any(), any(), any(), any())).thenReturn("access_token");
         when(jwtUtil.generateRefreshToken(any())).thenReturn("refresh_token");
-        when(passwordPolicyService.getExpireDays()).thenReturn(90);
         when(jwtUtil.extractJti(any())).thenReturn("jti-456");
         when(jwtUtil.extractExpiration(any())).thenReturn(System.currentTimeMillis() / 1000 + 7200);
 
@@ -436,6 +434,7 @@ class AuthServiceTest {
 
         when(captchaService.validateCaptcha(any(), any())).thenReturn(true);
         when(passwordPolicyService.isAccountLocked("new_user")).thenReturn(false);
+        when(passwordPolicyService.isPasswordExpired(any(User.class))).thenReturn(true);
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(userMapper.selectOne(any())).thenReturn(user);
         when(userMapper.selectRolesByUserId(2L)).thenReturn(java.util.Collections.emptyList());
@@ -466,10 +465,10 @@ class AuthServiceTest {
 
         when(captchaService.validateCaptcha(any(), any())).thenReturn(true);
         when(passwordPolicyService.isAccountLocked("old_user")).thenReturn(false);
+        when(passwordPolicyService.isPasswordExpired(any(User.class))).thenReturn(true);
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(userMapper.selectOne(any())).thenReturn(user);
         when(userMapper.selectRolesByUserId(3L)).thenReturn(java.util.Collections.emptyList());
-        when(passwordPolicyService.getExpireDays()).thenReturn(90);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> authService.login(request));
