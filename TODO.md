@@ -33,13 +33,13 @@
 - [x] ✅ 后端 `CustomerController` 10 个端点已完整（`/api/customers`）
 
 ### 5. 商机报备前端
-- [ ] 我的报备/全部商机列表页 `frontend/src/pages/opportunity/index.tsx`（9 行占位）
-- [ ] 新建/编辑报备表单
-- [ ] 报备审批列表与操作（通过/驳回/审批意见）
-- [ ] 报备状态流转展示（审批中/生效中/失效/锁定）
-- [ ] 报备保护提示（同客户+同业务域唯一）
-- [ ] 商机转项目按钮
-- [ ] 后端 `OpportunityController` 7 个端点已完整（含 `submit`/`approve`）
+- [x] 我的报备/全部商机列表页 `frontend/src/pages/opportunity/index.tsx`
+- [x] 新建/编辑报备表单
+- [x] 报备审批列表与操作（通过/驳回/审批意见）
+- [x] 报备状态流转展示（草稿/审批中/生效中/失败/失效）
+- [x] 报备保护提示（同客户+同业务域唯一）
+- [x] 商机转项目按钮（详情页 + 列表页跳转 `/project?createFromOpportunityId=X`）
+- [x] 后端 `OpportunityController` 7 个端点已完整（含 `submit`/`approve`）
 
 ### 6. 合同管理
 - [ ] 前端合同列表页 `frontend/src/pages/contract/index.tsx`（3 行占位）
