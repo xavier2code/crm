@@ -61,6 +61,69 @@ regenerate `src/types/api.d.ts` from backend OpenAPI.
 - **Frontend**: no automated tests configured. Verify with `npm run
   build` and manual smoke testing.
 
+## Git Worktree Workflow (Parallel Development)
+
+Multiple agents/developers work on the repo concurrently. To avoid
+conflicts at `main`, every multi-file change **must** be done inside a
+dedicated git worktree on its own branch. Do **not** create commits on
+`main` directly.
+
+### Lifecycle
+
+1. **Create** a worktree for your task from `main`:
+   ```bash
+   git -C /Users/xavier/Projects/Github/crm fetch origin
+   git -C /Users/xavier/Projects/Github/crm worktree add \
+     /Users/xavier/Projects/Github/crm/.worktree/<branch-name> \
+     -b <branch-name> origin/main
+   ```
+   Use a descriptive branch name, e.g.
+   `feat/project-list`, `fix/contract-node-stubs`, `chore/seed-v16`.
+
+2. **Work** entirely inside that worktree directory
+   (`/Users/xavier/Projects/Github/crm/.worktree/<branch-name>`). Run
+   the backend/frontend commands from there. Never edit files in
+   `/Users/xavier/Projects/Github/crm` while the worktree is open —
+   that is `main`.
+
+3. **Commit** on the branch using Conventional Commits. Run validation
+   inside the worktree before committing:
+   - Backend: `cd backend && ./gradlew test`
+   - Frontend: `cd frontend && npm run lint && npm run build`
+
+4. **Merge** back to `main` from the repo root (not the worktree):
+   ```bash
+   git -C /Users/xavier/Projects/Github/crm checkout main
+   git -C /Users/xavier/Projects/Github/crm pull --ff-only origin main
+   git -C /Users/xavier/Projects/Github/crm merge --no-ff <branch-name>
+   git -C /Users/xavier/Projects/Github/crm push origin main
+   ```
+   Use `--no-ff` so the merge commit preserves the feature branch in
+   history. If `main` moved while you worked, rebase or merge `main`
+   into your branch first, re-run validation, then merge.
+
+5. **Clean up** the worktree and branch:
+   ```bash
+   git -C /Users/xavier/Projects/Github/crm worktree remove \
+     /Users/xavier/Projects/Github/crm/.worktree/<branch-name>
+   git -C /Users/xavier/Projects/Github/crm branch -d <branch-name>
+   ```
+   Never leave a worktree in place after its branch is merged — it
+   will block future `git worktree add` calls and leak disk space.
+
+### Rules
+
+- One worktree per task/branch. Do not stack unrelated changes in the
+  same branch.
+- Do not commit to `main` directly, even for one-line fixes — open a
+  `fix/...` branch via worktree first.
+- If two agents must touch the same file, coordinate by claiming the
+  file path in the PR description; otherwise serialize via worktree
+  branches and let `main` resolve the order through merge commits.
+- For large features split across multiple commits, keep all commits on
+  the same feature branch and squash-merge at the end if history
+  cleanliness matters.
+
 ## Commit & Pull Request Guidelines
 
 - **Conventional Commits**: `<type>(<scope>): <subject>` — types in
