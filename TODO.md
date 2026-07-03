@@ -154,9 +154,9 @@
 - [x] ✅ 改密清除标志：`AuthService.changePassword` 末尾设 `is_initial_password=0` + 更新 `passwordChangedAt`
 - [x] ✅ 前端 `/change-password` 路由注册（页面 100+ 行已存在但路由缺失 → 修）
 - [x] ✅ 前端 client 拦截器 2007 → `/change-password`（已存在）
-- [ ] ❌ 登录响应 `userInfo.departmentId/departmentName` 填充：阻塞于 `t_department` 表未建模，待产品确认
-- [ ] ❌ 密码强度校验（`AuthService.changePassword` 仍留 `TODO`）：等 `PasswordPolicyService` 加 `validateStrength` 后接入
-- 提交：`bd8962a`（merge `c61cc59` 已 push origin/main）
+- [x] ✅ 登录响应 `userInfo.departmentId/departmentName` 填充：新增 `t_department`（V23）+ `User.department_id` + `AuthService.login` 填充
+- [x] ✅ 密码强度校验（`AuthService.changePassword` 接入 `PasswordPolicyService.validateStrength`）：默认 8 位以上且含大/小写/数字/特殊字符，错误码 2009
+- 提交：`bd8962a`（merge `c61cc59` 已 push origin/main）、`2356e91`（merge `feat/auth-login-optimization`）
 
 ### 18. 商机报备优化
 - [x] ✅ 48h 钉钉催办 scheduler（`OpportunityApprovalReminderScheduler`）— 站内信形式实现
@@ -192,7 +192,7 @@
 |---|---|---|---|
 | 🔴 高优先级 10 项 | 10 | 0 | 0 |
 | 🟡 中优先级 4 项 | 4 | 0 | 0 |
-| 🟢 低优先级 6 项 | 2 | 2 | 2 |
+| 🟢 低优先级 6 项 | 4 | 0 | 2 |
 | **合计 20 项** | **16** | **2** | **2** |
 
 **最近合并的相关 commit**：
