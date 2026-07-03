@@ -33,6 +33,7 @@ const FollowUpPage = lazy(() => import('@/pages/followup'))
 const TaskPage = lazy(() => import('@/pages/task'))
 const NotificationsPage = lazy(() => import('@/pages/notifications'))
 const BusinessPage = lazy(() => import('@/pages/business'))
+const BusinessUnitsPage = lazy(() => import('@/pages/business/units'))
 const ReimbursementPage = lazy(() => import('@/pages/reimbursement'))
 const ForbiddenPage = lazy(() => import('@/pages/error/403'))
 
@@ -113,6 +114,14 @@ export function Router() {
             element={
               <LazyWrapper>
                 <RebateRatesPage />
+              </LazyWrapper>
+            }
+          />
+          <Route
+            path="business/units"
+            element={
+              <LazyWrapper>
+                <BusinessUnitsPage />
               </LazyWrapper>
             }
           />

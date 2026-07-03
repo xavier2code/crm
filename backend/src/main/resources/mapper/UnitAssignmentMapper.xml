@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cy.crm.module.unit.mapper.UnitAssignmentMapper">
+
+    <resultMap id="UnitAssignmentVOMap" type="com.cy.crm.module.unit.vo.UnitAssignmentVO">
+        <id property="id" column="id"/>
+        <result property="unitId" column="unit_id"/>
+        <result property="unitName" column="unit_name"/>
+        <result property="unitRegion" column="unit_region"/>
+        <result property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="realName" column="real_name"/>
+        <result property="assignScope" column="assign_scope"/>
+        <result property="channelId" column="channel_id"/>
+        <result property="channelName" column="channel_name"/>
+        <result property="assignedBy" column="assigned_by"/>
+        <result property="assignedByName" column="assigned_by_name"/>
+        <result property="assignedAt" column="assigned_at"/>
+    </resultMap>
+
+    <select id="selectAssignmentPage" resultMap="UnitAssignmentVOMap">
+        SELECT
+            a.id, a.unit_id, a.user_id, a.assign_scope, a.channel_id,
+            a.assigned_by, a.assigned_at,
+            u.name   AS unit_name,
+            u.region AS unit_region,
+            usr.username AS username,
+            usr.real_name AS real_name,
+            c.name   AS channel_name,
+            op.real_name AS assigned_by_name
+        FROM t_unit_assignment a
+        LEFT JOIN t_unit u        ON u.id = a.unit_id
+        LEFT JOIN t_user  usr     ON usr.id = a.user_id
+        LEFT JOIN t_channel c     ON c.id = a.channel_id
+        LEFT JOIN t_user  op      ON op.id = a.assigned_by
+        <where>
+            <if test="unitId != null">AND a.unit_id = #{unitId}</if>
+            <if test="userId != null">AND a.user_id = #{userId}</if>
+            <if test="channelId != null">AND a.channel_id = #{channelId}</if>
+            <if test="assignScope != null and assignScope != ''">AND a.assign_scope = #{assignScope}</if>
+        </where>
+        ORDER BY a.assigned_at DESC
+    </select>
+</mapper>
